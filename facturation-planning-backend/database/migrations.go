@@ -7,7 +7,13 @@ import (
 )
 
 func MigrateDB() {
-	err := config.DB.AutoMigrate(&models.Entreprise{}, &models.Salarie{}, &models.Facture{})
+	err := config.DB.AutoMigrate(
+		&models.Entreprise{},
+		&models.Salarie{},
+		&models.Facture{},
+		&models.Planning{},
+	)
+
 	if err != nil {
 		fmt.Println("❌ Erreur de migration :", err)
 	} else {

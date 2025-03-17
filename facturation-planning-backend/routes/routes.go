@@ -5,10 +5,18 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"facturation-planning/controllers"
+	"facturation-planning/middlewares"
 )
 
 func SetupRoutes() *chi.Mux {
 	r := chi.NewRouter()
+
+	// Auth
+	AuthRoutes(r)
+
+	// Autres routes (protégées après connexion)
+	r.With(middlewares.JWTMiddleware).Get("/profile", controllers.GetProfile)
+
 
 	// Entreprises
 	r.Get("/entreprises", controllers.GetEntreprises)

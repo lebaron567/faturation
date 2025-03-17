@@ -4,14 +4,16 @@ import "gorm.io/gorm"
 
 type Entreprise struct {
 	gorm.Model
-	Nom            string `json:"nom"`
-	Adresse        string `json:"adresse"`
-	Email          string `json:"email"`
-	Telephone      string `json:"telephone"`
-	SIRET          string `json:"siret"`
-	TVA            string `json:"tva"`
-	Responsable    string `json:"responsable"`
-	Salariés       []Salarie `gorm:"foreignKey:EntrepriseID"`
-	Factures       []Facture `gorm:"foreignKey:EntrepriseID"`
-	Plannings      []Planning `gorm:"foreignKey:EntrepriseID"`
+	Nom         string `json:"nom"`
+	Adresse     string `json:"adresse"`
+	Email       string `json:"email" gorm:"unique"`
+	Telephone   string `json:"telephone"`
+	SIRET       string `json:"siret"`
+	TVA         string `json:"tva"`
+	IBAN        string `json:"iban"`
+	BIC         string `json:"bic"`
+	Responsable string `json:"responsable"`
+
+	// Champs pour l'authentification
+	Password string `json:"-"` // Ne pas exposer le mot de passe
 }
