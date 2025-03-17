@@ -1,0 +1,38 @@
+# 🛑 Fichiers binaires Go
+*.exe
+*.out
+*.test
+*.o
+
+# 🛑 Modules et dépendances Go
+/go/
+bin/
+vendor/
+go.sum
+go.work
+go.work.sum
+
+# 🛑 Fichiers de configuration et logs
+.env
+config/*.env
+*.log
+*.tmp
+
+# 🛑 Cache et build
+*.swp
+.idea/
+.vscode/
+.DS_Store
+node_modules/
+tmp/
+cache/
+__pycache__/
+
+# 🛑 Docker (si utilisé)
+docker-compose.override.yml
+.dockerignore
+
+# 🛑 PostgreSQL (fichiers temporaires)
+pgdata/
+postgres-data/
+f
