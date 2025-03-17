@@ -3,9 +3,10 @@ package routes
 import (
 	//"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"facturation-planning/controllers"
 	"facturation-planning/middlewares"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func SetupRoutes() *chi.Mux {
@@ -13,10 +14,10 @@ func SetupRoutes() *chi.Mux {
 
 	// Auth
 	AuthRoutes(r)
+	FactureRoutes(r)
 
 	// Autres routes (protégées après connexion)
 	r.With(middlewares.JWTMiddleware).Get("/profile", controllers.GetProfile)
-
 
 	// Entreprises
 	r.Get("/entreprises", controllers.GetEntreprises)
@@ -33,7 +34,6 @@ func SetupRoutes() *chi.Mux {
 	r.Get("/plannings", controllers.GetPlannings)
 	r.Post("/plannings", controllers.CreatePlanning)
 	r.Put("/plannings/{id}/convertir", controllers.ConvertPlanningToFacture)
-
 
 	return r
 }

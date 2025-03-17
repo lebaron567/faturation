@@ -1,9 +1,9 @@
 package database
 
 import (
-	"fmt"
 	"facturation-planning/config"
 	"facturation-planning/models"
+	"fmt"
 )
 
 func MigrateDB() {

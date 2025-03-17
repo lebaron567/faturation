@@ -36,3 +36,5 @@ docker-compose.override.yml
 pgdata/
 postgres-data/
 f
+
+*.pdf

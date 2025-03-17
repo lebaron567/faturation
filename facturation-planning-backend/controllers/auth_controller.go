@@ -26,8 +26,8 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-		// Afficher les données reçues
-		fmt.Println("📌 Données reçues:", input)
+	// Afficher les données reçues
+	fmt.Println("📌 Données reçues:", input)
 
 	// Vérifier si les champs sont remplis
 	if input.Email == "" || input.Password == "" || input.Nom == "" {
