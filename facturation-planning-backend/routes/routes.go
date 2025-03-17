@@ -18,6 +18,7 @@ func SetupRoutes() *chi.Mux {
 
 	// Autres routes (protégées après connexion)
 	r.With(middlewares.JWTMiddleware).Get("/profile", controllers.GetProfile)
+	
 
 	// Entreprises
 	r.Get("/entreprises", controllers.GetEntreprises)

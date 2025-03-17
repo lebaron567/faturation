@@ -12,7 +12,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Enregistrement d'une entreprise (création du compte)
+// @Summary Créer une entreprise (inscription)
+// @Description Permet de créer un compte entreprise en renseignant un nom, un email et un mot de passe
+// @Accept  json
+// @Produce  json
+// @Param entreprise body models.RegisterEntrepriseRequest true "Détails de l'entreprise"
+// @Success 201 {object} map[string]string "Compte créé avec succès"
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 409 {string} string "Email déjà utilisé"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /register [post]
 func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Nom      string `json:"nom"`
@@ -26,8 +35,7 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Afficher les données reçues
-	fmt.Println("📌 Données reçues:", input)
+
 
 	// Vérifier si les champs sont remplis
 	if input.Email == "" || input.Password == "" || input.Nom == "" {
@@ -42,8 +50,6 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("📌 Mot de passe en clair avant hashage:", input.Password)
-
 	// Hash du mot de passe
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -51,8 +57,6 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Afficher le mot de passe haché pour vérification
-	fmt.Println("📌 Mot de passe haché avant stockage:", string(hashedPassword))
 
 	// Créer l'entreprise avec les données validées
 	entreprise := models.Entreprise{
@@ -72,7 +76,16 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Compte entreprise créé avec succès"})
 }
 
-// Connexion d'une entreprise
+// @Summary Connexion d'une entreprise
+// @Description Permet de se connecter avec un email et un mot de passe pour récupérer un token JWT
+// @Accept  json
+// @Produce  json
+// @Param credentials body models.LoginRequest true "Identifiants de connexion"
+// @Success 200 {object} map[string]string "Token JWT généré"
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 401 {string} string "Email ou mot de passe incorrect"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /login [post]
 func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email    string `json:"email"`
@@ -99,9 +112,6 @@ func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Afficher les valeurs pour debug
-	fmt.Println("📌 Mot de passe stocké en base:", entreprise.Password)
-	fmt.Println("📌 Mot de passe fourni:", input.Password)
 
 	// Supprimer les espaces invisibles du mot de passe fourni
 	input.Password = strings.TrimSpace(input.Password)
@@ -124,7 +134,13 @@ func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
-// Récupération du profil de l'entreprise connectée
+// @Summary Récupérer le profil de l'entreprise connectée
+// @Description Retourne les informations de l'entreprise actuellement connectée
+// @Security BearerAuth
+// @Produce  json
+// @Success 200 {object} models.Entreprise
+// @Failure 401 {string} string "Non autorisé"
+// @Router /profile [get]
 func GetProfile(w http.ResponseWriter, r *http.Request) {
 	entrepriseID, ok := r.Context().Value("entrepriseID").(float64)
 	if !ok {

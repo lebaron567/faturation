@@ -9,6 +9,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// @Summary Lister tous les plannings
+// @Description Retourne la liste complète des plannings enregistrés
+// @Produce  json
+// @Success 200 {array} models.Planning
+// @Router /plannings [get]
 func GetPlannings(w http.ResponseWriter, r *http.Request) {
 	var plannings []models.Planning
 	config.DB.Find(&plannings)
@@ -23,6 +28,12 @@ func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(planning)
 }
 
+// @Summary Convertir un planning en facture
+// @Description Transforme un planning existant en facture et retourne la facture générée
+// @Param id path int true "ID du planning"
+// @Success 200 {object} models.Facture
+// @Failure 404 {string} string "Planning non trouvé"
+// @Router /plannings/{id}/convertir [put]
 func ConvertPlanningToFacture(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var planning models.Planning

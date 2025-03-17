@@ -1,0 +1,592 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API pour gérer la facturation et les plannings",
+        "title": "Facturation API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/factures": {
+            "get": {
+                "description": "Retourne la liste complète des factures en base de données",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Lister toutes les factures",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Facture"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Ajoute une nouvelle facture en base de données",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Créer une facture",
+                "parameters": [
+                    {
+                        "description": "Détails de la facture",
+                        "name": "facture",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Facture"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Facture"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/factures/{id}/pdf": {
+            "get": {
+                "description": "Génère un PDF pour une facture donnée",
+                "produces": [
+                    "application/pdf"
+                ],
+                "summary": "Récupérer une facture en PDF",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la facture",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Facture non trouvée",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "description": "Permet de se connecter avec un email et un mot de passe pour récupérer un token JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Connexion d'une entreprise",
+                "parameters": [
+                    {
+                        "description": "Identifiants de connexion",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token JWT généré",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Email ou mot de passe incorrect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/plannings": {
+            "get": {
+                "description": "Retourne la liste complète des plannings enregistrés",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Lister tous les plannings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Planning"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/plannings/{id}/convertir": {
+            "put": {
+                "description": "Transforme un planning existant en facture et retourne la facture générée",
+                "summary": "Convertir un planning en facture",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID du planning",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Facture"
+                        }
+                    },
+                    "404": {
+                        "description": "Planning non trouvé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retourne les informations de l'entreprise actuellement connectée",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Récupérer le profil de l'entreprise connectée",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Entreprise"
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "description": "Permet de créer un compte entreprise en renseignant un nom, un email et un mot de passe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Créer une entreprise (inscription)",
+                "parameters": [
+                    {
+                        "description": "Détails de l'entreprise",
+                        "name": "entreprise",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterEntrepriseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Compte créé avec succès",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Email déjà utilisé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/salaries": {
+            "get": {
+                "description": "Retourne la liste des salariés enregistrés",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Récupérer tous les salariés",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Salarie"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Ajoute un nouveau salarié à la base de données",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Créer un salarié",
+                "parameters": [
+                    {
+                        "description": "Détails du salarié",
+                        "name": "salarie",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Salarie"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Salarie"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Entreprise": {
+            "type": "object",
+            "properties": {
+                "adresse": {
+                    "type": "string",
+                    "example": "123 rue du Code"
+                },
+                "bic": {
+                    "type": "string",
+                    "example": "BIC12345"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "contact@maboite.com"
+                },
+                "iban": {
+                    "type": "string",
+                    "example": "FR7612345987650123456789014"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nom": {
+                    "type": "string",
+                    "example": "MaBoite"
+                },
+                "responsable": {
+                    "type": "string",
+                    "example": "Jean Dupont"
+                },
+                "siret": {
+                    "type": "string",
+                    "example": "12345678901234"
+                },
+                "telephone": {
+                    "type": "string",
+                    "example": "+33123456789"
+                },
+                "tva": {
+                    "type": "string",
+                    "example": "FR12345678901"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                }
+            }
+        },
+        "models.Facture": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                },
+                "date_echeance": {
+                    "type": "string",
+                    "example": "2025-04-17"
+                },
+                "date_emission": {
+                    "type": "string",
+                    "example": "2025-03-17"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Facture pour prestation de services"
+                },
+                "entreprise_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "montant_ht": {
+                    "type": "number",
+                    "example": 1000.5
+                },
+                "montant_ttc": {
+                    "type": "number",
+                    "example": 1200.6
+                },
+                "numero": {
+                    "type": "string",
+                    "example": "FAC-2025-001"
+                },
+                "planning_id": {
+                    "description": "Lien avec le planning si applicable",
+                    "type": "integer",
+                    "example": 3
+                },
+                "statut": {
+                    "description": "\"payée\", \"en attente\", \"rejetée\"",
+                    "type": "string",
+                    "example": "en attente"
+                },
+                "taux_tva": {
+                    "type": "number",
+                    "example": 20
+                },
+                "type": {
+                    "description": "\"standard\", \"etat_avancement\", \"auto_liquidation\"",
+                    "type": "string",
+                    "example": "standard"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                }
+            }
+        },
+        "models.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "contact@maboite.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "securepass"
+                }
+            }
+        },
+        "models.Planning": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                },
+                "date_debut": {
+                    "type": "string",
+                    "example": "2025-04-01"
+                },
+                "date_fin": {
+                    "type": "string",
+                    "example": "2025-04-30"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Planification des tâches pour le projet X"
+                },
+                "entreprise_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "facture": {
+                    "description": "Relation avec Facture (optionnel)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Facture"
+                        }
+                    ]
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nom": {
+                    "type": "string",
+                    "example": "Projet X"
+                },
+                "statut": {
+                    "description": "\"prévu\", \"en cours\", \"terminé\"",
+                    "type": "string",
+                    "example": "en cours"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                }
+            }
+        },
+        "models.RegisterEntrepriseRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "contact@maboite.com"
+                },
+                "nom": {
+                    "type": "string",
+                    "example": "MaBoite"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "securepass"
+                }
+            }
+        },
+        "models.Salarie": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "jean.dupont@example.com"
+                },
+                "entreprise_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nom": {
+                    "type": "string",
+                    "example": "Jean Dupont"
+                },
+                "telephone": {
+                    "type": "string",
+                    "example": "+33123456789"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-03-17T14:09:30.706109+01:00"
+                }
+            }
+        }
+    }
+}

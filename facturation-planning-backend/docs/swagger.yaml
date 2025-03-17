@@ -1,0 +1,406 @@
+basePath: /
+definitions:
+  models.Entreprise:
+    properties:
+      adresse:
+        example: 123 rue du Code
+        type: string
+      bic:
+        example: BIC12345
+        type: string
+      created_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+      deleted_at:
+        type: string
+      email:
+        example: contact@maboite.com
+        type: string
+      iban:
+        example: FR7612345987650123456789014
+        type: string
+      id:
+        example: 1
+        type: integer
+      nom:
+        example: MaBoite
+        type: string
+      responsable:
+        example: Jean Dupont
+        type: string
+      siret:
+        example: "12345678901234"
+        type: string
+      telephone:
+        example: "+33123456789"
+        type: string
+      tva:
+        example: FR12345678901
+        type: string
+      updated_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+    type: object
+  models.Facture:
+    properties:
+      created_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+      date_echeance:
+        example: "2025-04-17"
+        type: string
+      date_emission:
+        example: "2025-03-17"
+        type: string
+      deleted_at:
+        type: string
+      description:
+        example: Facture pour prestation de services
+        type: string
+      entreprise_id:
+        example: 5
+        type: integer
+      id:
+        example: 1
+        type: integer
+      montant_ht:
+        example: 1000.5
+        type: number
+      montant_ttc:
+        example: 1200.6
+        type: number
+      numero:
+        example: FAC-2025-001
+        type: string
+      planning_id:
+        description: Lien avec le planning si applicable
+        example: 3
+        type: integer
+      statut:
+        description: '"payée", "en attente", "rejetée"'
+        example: en attente
+        type: string
+      taux_tva:
+        example: 20
+        type: number
+      type:
+        description: '"standard", "etat_avancement", "auto_liquidation"'
+        example: standard
+        type: string
+      updated_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        example: contact@maboite.com
+        type: string
+      password:
+        example: securepass
+        type: string
+    type: object
+  models.Planning:
+    properties:
+      created_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+      date_debut:
+        example: "2025-04-01"
+        type: string
+      date_fin:
+        example: "2025-04-30"
+        type: string
+      deleted_at:
+        type: string
+      description:
+        example: Planification des tâches pour le projet X
+        type: string
+      entreprise_id:
+        example: 5
+        type: integer
+      facture:
+        allOf:
+        - $ref: '#/definitions/models.Facture'
+        description: Relation avec Facture (optionnel)
+      id:
+        example: 1
+        type: integer
+      nom:
+        example: Projet X
+        type: string
+      statut:
+        description: '"prévu", "en cours", "terminé"'
+        example: en cours
+        type: string
+      updated_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+    type: object
+  models.RegisterEntrepriseRequest:
+    properties:
+      email:
+        example: contact@maboite.com
+        type: string
+      nom:
+        example: MaBoite
+        type: string
+      password:
+        example: securepass
+        type: string
+    type: object
+  models.Salarie:
+    properties:
+      created_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+      deleted_at:
+        type: string
+      email:
+        example: jean.dupont@example.com
+        type: string
+      entreprise_id:
+        example: 5
+        type: integer
+      id:
+        example: 1
+        type: integer
+      nom:
+        example: Jean Dupont
+        type: string
+      telephone:
+        example: "+33123456789"
+        type: string
+      updated_at:
+        example: "2025-03-17T14:09:30.706109+01:00"
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API pour gérer la facturation et les plannings
+  title: Facturation API
+  version: "1.0"
+paths:
+  /factures:
+    get:
+      description: Retourne la liste complète des factures en base de données
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Facture'
+            type: array
+      summary: Lister toutes les factures
+    post:
+      consumes:
+      - application/json
+      description: Ajoute une nouvelle facture en base de données
+      parameters:
+      - description: Détails de la facture
+        in: body
+        name: facture
+        required: true
+        schema:
+          $ref: '#/definitions/models.Facture'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Facture'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer une facture
+  /factures/{id}/pdf:
+    get:
+      description: Génère un PDF pour une facture donnée
+      parameters:
+      - description: ID de la facture
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Facture non trouvée
+          schema:
+            type: string
+      summary: Récupérer une facture en PDF
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Permet de se connecter avec un email et un mot de passe pour récupérer
+        un token JWT
+      parameters:
+      - description: Identifiants de connexion
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token JWT généré
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "401":
+          description: Email ou mot de passe incorrect
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Connexion d'une entreprise
+  /plannings:
+    get:
+      description: Retourne la liste complète des plannings enregistrés
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Planning'
+            type: array
+      summary: Lister tous les plannings
+  /plannings/{id}/convertir:
+    put:
+      description: Transforme un planning existant en facture et retourne la facture
+        générée
+      parameters:
+      - description: ID du planning
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Facture'
+        "404":
+          description: Planning non trouvé
+          schema:
+            type: string
+      summary: Convertir un planning en facture
+  /profile:
+    get:
+      description: Retourne les informations de l'entreprise actuellement connectée
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Entreprise'
+        "401":
+          description: Non autorisé
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Récupérer le profil de l'entreprise connectée
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Permet de créer un compte entreprise en renseignant un nom, un
+        email et un mot de passe
+      parameters:
+      - description: Détails de l'entreprise
+        in: body
+        name: entreprise
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterEntrepriseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Compte créé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "409":
+          description: Email déjà utilisé
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer une entreprise (inscription)
+  /salaries:
+    get:
+      description: Retourne la liste des salariés enregistrés
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Salarie'
+            type: array
+      summary: Récupérer tous les salariés
+    post:
+      consumes:
+      - application/json
+      description: Ajoute un nouveau salarié à la base de données
+      parameters:
+      - description: Détails du salarié
+        in: body
+        name: salarie
+        required: true
+        schema:
+          $ref: '#/definitions/models.Salarie'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Salarie'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer un salarié
+swagger: "2.0"
