@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture</title>
+
+    <!-- Liens CSS pour Go Live et wkhtmltopdf -->
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+    <div class="company-info">
+        <!-- Le logo doit être accessible pour Go Live et wkhtmltopdf -->
+        <img src="assets/logo.png" alt="Logo" style="width: 150px;">
+        
+        <strong>{{ .EntrepriseNom }}</strong><br>
+        <p><strong>Adresse :</strong> {{ .EntrepriseAdresse }}</p>
+        <p><strong>Tèl :</strong> {{ .EntrepriseTelephone }} <strong>Email :</strong> {{ .EntrepriseEmail }}</p>
+    </div>
+
+    <div class="header">FACTURE N° {{ .Numero }}</div>
+
+    <div class="details">
+        <p><strong>Date :</strong> {{ .Date }}</p>
+        <p><strong>Client :</strong> {{ .ClientNom }}</p>
+        <p><strong>Objet :</strong> Nettoyage des locaux</p>
+    </div>
+
+    <table class="table">
+        <tr>
+            <th>Description</th>
+            <th>Montant HT</th>
+            <th>TVA</th>
+            <th>Montant TTC</th>
+        </tr>
+        <tr>
+            <td>{{ .Description }}</td>
+            <td>{{ .MontantHT }} €</td>
+            <td>{{ .TVA }} %</td>
+            <td>{{ .MontantTTC }} €</td>
+        </tr>
+    </table>
+
+    <div class="total">Total TTC: {{ .MontantTTC }} €</div>
+
+    <p><strong>Règlement :</strong> A payer sous 30 jours.</p>
+
+</body>
+</html>

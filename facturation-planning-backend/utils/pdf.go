@@ -1,45 +1,86 @@
 package utils
 
 import (
-	"facturation-planning/models"
+	"bytes"
 	"fmt"
+	"html/template"
+	"os"
 
-	"github.com/jung-kurt/gofpdf"
+	"facturation-planning/models"
+
+	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
-// Générer une facture PDF
-func GenerateInvoicePDF(facture models.Facture) (string, error) {
-	fileName := fmt.Sprintf("facture_%d.pdf", facture.ID)
+// GenerateInvoicePDF génère un fichier PDF à partir d'un template HTML
+func GenerateInvoicePDF(facture models.Facture, useFilePath bool) (string, error) {
+	fmt.Println("🚀 GenerateInvoicePDF appelée pour la facture :", facture.ID)
 
-	// Création du PDF
-	pdf := gofpdf.New("P", "mm", "A4", "")
-
-	// Ajouter une page
-	pdf.AddPage()
-
-	// Police
-	pdf.SetFont("Arial", "B", 16)
-
-	// En-tête de la facture
-	pdf.Cell(40, 10, "Facture")
-	pdf.Ln(10)
-
-	// Détails de l'entreprise
-	pdf.SetFont("Arial", "", 12)
-	pdf.Cell(40, 10, fmt.Sprintf("Entreprise: %d", facture.EntrepriseID))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Montant HT: %.2f EUR", facture.MontantHT))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Montant TTC: %.2f EUR", facture.MontantTTC))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Statut: %s", facture.Statut))
-	pdf.Ln(10)
-
-	// Sauvegarde du fichier PDF
-	err := pdf.OutputFileAndClose(fileName)
+	// Charger le template HTML
+	tmpl, err := template.ParseFiles("templates/facture.html")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Erreur lors du chargement du template : %v", err)
 	}
 
-	return fileName, nil
+	// Remplir le template avec les données de la facture
+	var tplBuffer bytes.Buffer
+	err = tmpl.Execute(&tplBuffer, map[string]interface{}{
+		"EntrepriseNom": fmt.Sprintf("%d", facture.EntrepriseID),
+		"ClientNom":     "Client XYZ",
+		"Date":          facture.DateEmission,
+		"Description":   facture.Description,
+		"MontantHT":     fmt.Sprintf("%.2f", facture.MontantHT),
+		"TVA":           fmt.Sprintf("%.2f", facture.TauxTVA),
+		"MontantTTC":    fmt.Sprintf("%.2f", facture.MontantTTC),
+		"UseFilePath":   useFilePath, // ✅ Ajout de la variable pour choisir le bon chemin
+	})
+	if err != nil {
+		return "", fmt.Errorf("Erreur lors de l'exécution du template : %v", err)
+	}
+
+	fmt.Println("✅ HTML généré avec succès !")
+
+	// Sauvegarde temporaire du HTML
+	tempHTMLFile := "facture_temp.html"
+	err = os.WriteFile(tempHTMLFile, tplBuffer.Bytes(), 0644)
+	if err != nil {
+		return "", fmt.Errorf("Erreur lors de l'écriture du fichier HTML temporaire : %v", err)
+	}
+
+	// Si c'est pour Live Server, retourne juste le chemin HTML
+	if !useFilePath {
+		return tempHTMLFile, nil
+	}
+
+	// Création du PDF
+	pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	if err != nil {
+		fmt.Println("❌ Erreur lors de la création du générateur PDF :", err)
+		return "", fmt.Errorf("Erreur lors de la création du générateur PDF : %v", err)
+	}
+
+	pdfg.AddPage(wkhtmltopdf.NewPage(tempHTMLFile))
+	fmt.Println("🔍 Conversion en PDF en cours...")
+
+	err = pdfg.Create()
+	if err != nil {
+		fmt.Println("❌ Erreur lors de la création du PDF :", err)
+		return "", fmt.Errorf("Erreur lors de la création du PDF : %v", err)
+	}
+
+	// Vérifier si le dossier "factures" existe
+	factureDir := "factures"
+	if _, err := os.Stat(factureDir); os.IsNotExist(err) {
+		os.Mkdir(factureDir, 0755)
+	}
+
+	// Sauvegarde du PDF
+	filePath := fmt.Sprintf("factures/facture_%d.pdf", facture.ID)
+	err = pdfg.WriteFile(filePath)
+	if err != nil {
+		fmt.Println("❌ Erreur lors de la sauvegarde du PDF :", err)
+		return "", fmt.Errorf("Erreur lors de la sauvegarde du PDF : %v", err)
+	}
+
+	fmt.Println("✅ PDF généré avec succès :", filePath)
+	return filePath, nil
 }

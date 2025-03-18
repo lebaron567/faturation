@@ -68,7 +68,7 @@ func GenerateFacturePDF(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Générer le fichier PDF
-	fileName, err := utils.GenerateInvoicePDF(facture)
+	fileName, err := utils.GenerateInvoicePDF(facture,true)
 	if err != nil {
 		http.Error(w, "Erreur lors de la génération du PDF", http.StatusInternalServerError)
 		return
