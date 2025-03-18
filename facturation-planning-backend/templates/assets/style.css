@@ -1,37 +1,67 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 20px;
-    padding: 10px;
+    margin: 30px;
+    padding: 20px;
+    background-color: #fff;
 }
+
 .header {
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #000;
+    padding-bottom: 15px;
     margin-bottom: 20px;
 }
+
+.logo {
+    width: 120px;
+}
+
 .company-info {
-    text-align: left;
-    font-size: 14px;
+    text-align: right;
 }
-.details {
-    margin-top: 20px;
+
+.info-facture,
+.info-client {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
 }
-.table {
+
+.facture-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 }
-.table, th, td {
+
+.facture-table th, .facture-table td {
     border: 1px solid black;
     padding: 10px;
     text-align: left;
 }
-th {
+
+.facture-table th {
     background-color: #f2f2f2;
 }
+
 .total {
     text-align: right;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     margin-top: 20px;
+}
+
+.total-tva {
+    font-size: 20px;
+    color: red;
+}
+
+.payment-info,
+.mentions-legales {
+    margin-top: 20px;
+    font-size: 14px;
+    border-top: 2px solid #000;
+    padding-top: 10px;
 }
