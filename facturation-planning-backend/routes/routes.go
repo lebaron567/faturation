@@ -32,9 +32,12 @@ func SetupRoutes() *chi.Mux {
 	r.Get("/factures", controllers.GetFactures)
 	r.Post("/factures", controllers.CreateFacture)
 
+	// Plannings
 	r.Get("/plannings", controllers.GetPlannings)
 	r.Post("/plannings", controllers.CreatePlanning)
-	r.Put("/plannings/{id}/convertir", controllers.ConvertPlanningToFacture)
+	r.Put("/plannings/{id}", controllers.UpdatePlanning)
+	r.Delete("/plannings/{id}", controllers.DeletePlanning)
+
 
 	return r
 }

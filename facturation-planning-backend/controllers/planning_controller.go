@@ -9,17 +9,26 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// @Summary Lister tous les plannings
+// @Summary Récupérer tous les plannings
 // @Description Retourne la liste complète des plannings enregistrés
-// @Produce  json
+// @Produce json
 // @Success 200 {array} models.Planning
 // @Router /plannings [get]
 func GetPlannings(w http.ResponseWriter, r *http.Request) {
 	var plannings []models.Planning
-	config.DB.Find(&plannings)
+	config.DB.Preload("Salarie").Find(&plannings)
 	json.NewEncoder(w).Encode(plannings)
 }
 
+// @Summary Créer un planning
+// @Description Ajoute un nouveau planning en base de données
+// @Accept json
+// @Produce json
+// @Param planning body models.Planning true "Détails du planning"
+// @Success 201 {object} models.Planning
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /plannings [post]
 func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	var planning models.Planning
 	json.NewDecoder(r.Body).Decode(&planning)
@@ -28,42 +37,41 @@ func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(planning)
 }
 
-// @Summary Convertir un planning en facture
-// @Description Transforme un planning existant en facture et retourne la facture générée
+// @Summary Modifier un planning
+// @Description Met à jour un planning existant par son ID
+// @Accept json
+// @Produce json
 // @Param id path int true "ID du planning"
-// @Success 200 {object} models.Facture
+// @Param planning body models.Planning true "Nouvelles informations du planning"
+// @Success 200 {object} models.Planning
+// @Failure 400 {string} string "Requête invalide"
 // @Failure 404 {string} string "Planning non trouvé"
-// @Router /plannings/{id}/convertir [put]
-func ConvertPlanningToFacture(w http.ResponseWriter, r *http.Request) {
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /plannings/{id} [put]
+func UpdatePlanning(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var planning models.Planning
+	config.DB.First(&planning, id)
 
-	if err := config.DB.First(&planning, id).Error; err != nil {
+	if planning.ID == 0 {
 		http.Error(w, "Planning non trouvé", http.StatusNotFound)
 		return
 	}
 
-	// Création de la facture à partir du planning
-	facture := models.Facture{
-		Numero:       "FCT-" + id, // Génération d’un numéro basique
-		Type:         "standard",
-		MontantHT:    1000, // À calculer dynamiquement
-		MontantTTC:   1200, // Si TVA = 20%
-		TauxTVA:      20.0,
-		DateEmission: "2025-03-17", // Exemple de date
-		DateEcheance: "2025-04-17",
-		Statut:       "en attente",
-		Description:  "Facturation du planning " + planning.Nom,
-		EntrepriseID: planning.EntrepriseID,
-		PlanningID:   &planning.ID,
-	}
-
-	config.DB.Create(&facture)
-
-	// Mise à jour du planning comme terminé
-	planning.Statut = "terminé"
+	json.NewDecoder(r.Body).Decode(&planning)
 	config.DB.Save(&planning)
+	json.NewEncoder(w).Encode(planning)
+}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(facture)
+// @Summary Supprimer un planning
+// @Description Supprime un planning par son ID
+// @Param id path int true "ID du planning"
+// @Success 204 "No Content"
+// @Failure 404 {string} string "Planning non trouvé"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /plannings/{id} [delete]
+func DeletePlanning(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	config.DB.Delete(&models.Planning{}, id)
+	w.WriteHeader(http.StatusNoContent)
 }

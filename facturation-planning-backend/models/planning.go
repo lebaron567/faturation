@@ -10,11 +10,17 @@ type Planning struct {
 	CreatedAt    time.Time  `json:"created_at" example:"2025-03-17T14:09:30.706109+01:00"`
 	UpdatedAt    time.Time  `json:"updated_at" example:"2025-03-17T14:09:30.706109+01:00"`
 	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
-	Nom          string     `json:"nom" example:"Projet X"`
-	DateDebut    string     `json:"date_debut" example:"2025-04-01"`
-	DateFin      string     `json:"date_fin" example:"2025-04-30"`
-	Description  string     `json:"description" example:"Planification des tâches pour le projet X"`
-	Statut       string     `json:"statut" example:"en cours"` // "prévu", "en cours", "terminé"
+	Date         string  `json:"date"`
+	HeureDebut   string  `json:"heure_debut"`
+	HeureFin     string  `json:"heure_fin"`
+	TypeEvenement string  `json:"type_evenement"` // "Intervention", "Réunion", etc.
+	SalarieID    uint    `json:"salarie_id"`
+	ClientID     uint    `json:"client_id"`
+	Objet        string  `json:"objet"`
+	Prestation   string  `json:"prestation"`
+	Facturation  string  `json:"facturation"` // "Comptabilisé" / "Non Comptabilisé"
+	TauxHoraire  float64 `json:"taux_horaire"`
+	ForfaitHT    float64 `json:"forfait_ht"`
 	EntrepriseID uint       `json:"entreprise_id" example:"5"`
 
 	// Relation avec Facture (optionnel)
