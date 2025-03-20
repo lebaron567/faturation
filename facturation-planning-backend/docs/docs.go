@@ -166,7 +166,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Lister tous les plannings",
+                "summary": "Récupérer tous les plannings",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -178,12 +178,107 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Ajoute un nouveau planning en base de données",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Créer un planning",
+                "parameters": [
+                    {
+                        "description": "Détails du planning",
+                        "name": "planning",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Planning"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Planning"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
-        "/plannings/{id}/convertir": {
+        "/plannings/{id}": {
             "put": {
-                "description": "Transforme un planning existant en facture et retourne la facture générée",
-                "summary": "Convertir un planning en facture",
+                "description": "Met à jour un planning existant par son ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Modifier un planning",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID du planning",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nouvelles informations du planning",
+                        "name": "planning",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Planning"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Planning"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Planning non trouvé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Supprime un planning par son ID",
+                "summary": "Supprimer un planning",
                 "parameters": [
                     {
                         "type": "integer",
@@ -194,14 +289,17 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Facture"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "404": {
                         "description": "Planning non trouvé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
                         "schema": {
                             "type": "string"
                         }
@@ -491,28 +589,26 @@ const docTemplate = `{
         "models.Planning": {
             "type": "object",
             "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2025-03-17T14:09:30.706109+01:00"
                 },
-                "date_debut": {
-                    "type": "string",
-                    "example": "2025-04-01"
-                },
-                "date_fin": {
-                    "type": "string",
-                    "example": "2025-04-30"
+                "date": {
+                    "type": "string"
                 },
                 "deleted_at": {
                     "type": "string"
                 },
-                "description": {
-                    "type": "string",
-                    "example": "Planification des tâches pour le projet X"
-                },
                 "entreprise_id": {
                     "type": "integer",
                     "example": 5
+                },
+                "facturation": {
+                    "description": "\"Comptabilisé\" / \"Non Comptabilisé\"",
+                    "type": "string"
                 },
                 "facture": {
                     "description": "Relation avec Facture (optionnel)",
@@ -522,18 +618,34 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "forfait_ht": {
+                    "type": "number"
+                },
+                "heure_debut": {
+                    "type": "string"
+                },
+                "heure_fin": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer",
                     "example": 1
                 },
-                "nom": {
-                    "type": "string",
-                    "example": "Projet X"
+                "objet": {
+                    "type": "string"
                 },
-                "statut": {
-                    "description": "\"prévu\", \"en cours\", \"terminé\"",
-                    "type": "string",
-                    "example": "en cours"
+                "prestation": {
+                    "type": "string"
+                },
+                "salarie_id": {
+                    "type": "integer"
+                },
+                "taux_horaire": {
+                    "type": "number"
+                },
+                "type_evenement": {
+                    "description": "\"Intervention\", \"Réunion\", etc.",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string",

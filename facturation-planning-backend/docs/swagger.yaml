@@ -102,36 +102,44 @@ definitions:
     type: object
   models.Planning:
     properties:
+      client_id:
+        type: integer
       created_at:
         example: "2025-03-17T14:09:30.706109+01:00"
         type: string
-      date_debut:
-        example: "2025-04-01"
-        type: string
-      date_fin:
-        example: "2025-04-30"
+      date:
         type: string
       deleted_at:
-        type: string
-      description:
-        example: Planification des tâches pour le projet X
         type: string
       entreprise_id:
         example: 5
         type: integer
+      facturation:
+        description: '"Comptabilisé" / "Non Comptabilisé"'
+        type: string
       facture:
         allOf:
         - $ref: '#/definitions/models.Facture'
         description: Relation avec Facture (optionnel)
+      forfait_ht:
+        type: number
+      heure_debut:
+        type: string
+      heure_fin:
+        type: string
       id:
         example: 1
         type: integer
-      nom:
-        example: Projet X
+      objet:
         type: string
-      statut:
-        description: '"prévu", "en cours", "terminé"'
-        example: en cours
+      prestation:
+        type: string
+      salarie_id:
+        type: integer
+      taux_horaire:
+        type: number
+      type_evenement:
+        description: '"Intervention", "Réunion", etc.'
         type: string
       updated_at:
         example: "2025-03-17T14:09:30.706109+01:00"
@@ -290,11 +298,37 @@ paths:
             items:
               $ref: '#/definitions/models.Planning'
             type: array
-      summary: Lister tous les plannings
-  /plannings/{id}/convertir:
-    put:
-      description: Transforme un planning existant en facture et retourne la facture
-        générée
+      summary: Récupérer tous les plannings
+    post:
+      consumes:
+      - application/json
+      description: Ajoute un nouveau planning en base de données
+      parameters:
+      - description: Détails du planning
+        in: body
+        name: planning
+        required: true
+        schema:
+          $ref: '#/definitions/models.Planning'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Planning'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer un planning
+  /plannings/{id}:
+    delete:
+      description: Supprime un planning par son ID
       parameters:
       - description: ID du planning
         in: path
@@ -302,15 +336,53 @@ paths:
         required: true
         type: integer
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Facture'
+        "204":
+          description: No Content
         "404":
           description: Planning non trouvé
           schema:
             type: string
-      summary: Convertir un planning en facture
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Supprimer un planning
+    put:
+      consumes:
+      - application/json
+      description: Met à jour un planning existant par son ID
+      parameters:
+      - description: ID du planning
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Nouvelles informations du planning
+        in: body
+        name: planning
+        required: true
+        schema:
+          $ref: '#/definitions/models.Planning'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Planning'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "404":
+          description: Planning non trouvé
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Modifier un planning
   /profile:
     get:
       description: Retourne les informations de l'entreprise actuellement connectée
