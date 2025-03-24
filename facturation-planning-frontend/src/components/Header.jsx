@@ -12,7 +12,7 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
 
   return (
     <header>
-      <h1>Gestion de Facturation</h1>
+      
       {isAuthenticated && <button onClick={handleLogout}>🚪 Se déconnecter</button>}
     </header>
   );

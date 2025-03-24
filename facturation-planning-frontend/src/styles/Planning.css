@@ -1,0 +1,95 @@
+/* 🌙 Fond semi-transparent derrière la modale */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    pointer-events: auto; /* ✅ Permet de cliquer pour fermer */
+  }
+  
+  .modal-content {
+    z-index: 999;
+    position: fixed;
+    background: white;
+    padding: 30px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    min-width: 400px;
+    outline: 2px solid red;
+  }
+  
+  .rbc-toolbar {
+    z-index: 1;           /* ✅ Permet aux boutons de passer devant */
+    position: relative;
+  }
+  
+  
+  /* 🧾 Formulaire dans la modale */
+  .modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .modal-content form input,
+  .modal-content form select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  .modal-content form button {
+    padding: 10px 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .modal-content form button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .modal-content form button[type="button"] {
+    background-color: #ccc;
+  }
+  
+  /* 📅 Planning : marge et bouton */
+  .planning-container {
+    padding: 20px;
+  }
+  
+  .planning-container h2 {
+    margin-bottom: 15px;
+  }
+  
+  .planning-container button {
+    margin-bottom: 15px;
+    padding: 10px 16px;
+    font-weight: bold;
+    background-color: #28a745;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .planning-container button:hover {
+    background-color: #218838;
+  }
+  
+  .rbc-toolbar button {
+    z-index: 1000;
+    position: relative;
+  }
+
+
+  

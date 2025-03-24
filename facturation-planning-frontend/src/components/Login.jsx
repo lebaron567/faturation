@@ -23,7 +23,6 @@ const Login = () => {
         if (response.data.token) {
             localStorage.setItem("token", response.data.token);
             console.log("🔑 Token stocké :", localStorage.getItem("token")); // ✅ Vérification
-              alert("✅ Connecté !");
         } else {
             alert("⚠️ Erreur : aucun token reçu !");
         }
