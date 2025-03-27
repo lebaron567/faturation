@@ -4,12 +4,18 @@ import moment from "moment";
 import "moment/locale/fr";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import axios from "../axiosInstance"; // au lieu de "axios"
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+
 
 import "../styles/Planning.css";
 import PlanningForm from "./PlanningForm";
 
 moment.locale("fr");
 const localizer = momentLocalizer(moment);
+
+
+const DnDCalendar = withDragAndDrop(Calendar);
 
 const messages = {
   allDay: "Toute la journée",
@@ -70,6 +76,28 @@ const Planning = () => {
     ? events.filter((e) => String(e.salarie_id) === String(selectedSalarieId))
     : events;
 
+
+  const handleEventDrop = async ({ event, start, end }) => {
+    const updatedEvent = {
+      ...event,
+      start,
+      end,
+      date: moment(start).format("YYYY-MM-DD"),
+      heure_debut: moment(start).format("HH:mm"),
+      heure_fin: moment(end).format("HH:mm"),
+    };
+
+    try {
+      await axios.put(`http://localhost:8080/plannings/${event.id}`, updatedEvent);
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === event.id ? { ...ev, ...updatedEvent } : ev))
+      );
+      alert("✅ Planning déplacé !");
+    } catch (err) {
+      alert("❌ Échec du déplacement");
+      console.error(err);
+    }
+  };
 
   // Envoi à l'API
   const handleCreate = async (e) => {
@@ -139,7 +167,10 @@ const Planning = () => {
           </select>
         </>
       )}
-      <Calendar
+      <DnDCalendar
+        onEventDrop={handleEventDrop}
+        resizable
+        onEventResize={handleEventDrop}
         localizer={localizer}
         events={eventsToDisplay} // ✅ Garde uniquement celle-ci
         startAccessor="start"
