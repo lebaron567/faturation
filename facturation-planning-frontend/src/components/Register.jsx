@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../axiosInstance"; // au lieu de "axios"
+
 
 const Register = () => {
   const [form, setForm] = useState({ email: "", password: "", nom: "" });

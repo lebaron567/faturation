@@ -20,8 +20,7 @@ function App() {
       <div className="App">
         <Header isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
         <Routes>
-          <Route path="/" element={<Home />} /> {/* ✅ Nouvelle page d'accueil */}
-          <Route path="/factures" element={isAuthenticated ? <FactureForm /> : <Navigate to="/login" />} />
+          <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/login" />} />          <Route path="/factures" element={isAuthenticated ? <FactureForm /> : <Navigate to="/login" />} />
           <Route path="/planning" element={isAuthenticated ? <Planning /> : <Navigate to="/login" />} />
           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/salarie/ajouter" element={<AddSalarie />} />

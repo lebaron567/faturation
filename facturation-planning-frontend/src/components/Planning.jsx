@@ -3,8 +3,10 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/fr";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import axios from "axios";
+import axios from "../axiosInstance"; // au lieu de "axios"
+
 import "../styles/Planning.css";
+import PlanningForm from "./PlanningForm";
 
 moment.locale("fr");
 const localizer = momentLocalizer(moment);
@@ -30,6 +32,8 @@ const Planning = () => {
   const [date, setDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({});
+  const [salaries, setSalaries] = useState([]); // ✅ manquait
+  const [selectedSalarieId, setSelectedSalarieId] = useState(null); // ✅ manquait
 
   // Charger les événements existants
   useEffect(() => {
@@ -44,50 +48,107 @@ const Planning = () => {
     });
   }, []);
 
+  useEffect(() => {
+    axios.get("http://localhost:8080/salaries", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }).then((res) => {
+      setSalaries(res.data);
+      if (res.data.length > 0) {
+        setSelectedSalarieId(res.data[0].id); // ✅ sélectionne automatiquement le premier salarié
+      }
+    });
+  }, []);
+
   // Mettre à jour les champs du formulaire
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const eventsToDisplay = selectedSalarieId
+    ? events.filter((e) => String(e.salarie_id) === String(selectedSalarieId))
+    : events;
+
+
   // Envoi à l'API
   const handleCreate = async (e) => {
     e.preventDefault();
-    try {
-      
-      setShowForm(false);
-      setForm({}); // Réinitialiser le formulaire
+    console.log("🔍 Formulaire envoyé :", form);
 
-      setEvents((prev) => [
-        ...prev,
-        {
-          title: `${form.type_evenement} - ${form.objet}`,
-          start: new Date(`${form.date}T${form.heure_debut}`),
-          end: new Date(`${form.date}T${form.heure_fin}`),
-          ...form,
+    try {
+      // Récupérer le profil pour obtenir entreprise_id
+      const profileRes = await axios.get("http://localhost:8080/profile", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      ]);
+      });
+
+      const entrepriseId = profileRes.data.id;
+
+      // Ajout de l'ID salarié et entreprise au planning
+      const payload = {
+        ...form,
+        salarie_id: selectedSalarieId,
+        entreprise_id: entrepriseId,
+      };
+      console.log("📦 Payload envoyé à l'API :", payload);
+
+      await axios.post("http://localhost:8080/plannings", payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setShowForm(false);
+      setForm({});
+
+      // Recharge les événements depuis la BDD
+      const res = await axios.get("http://localhost:8080/plannings");
+      const formatted = res.data.map((e) => ({
+        title: `${e.type_evenement} - ${e.objet}`,
+        start: new Date(`${e.date}T${e.heure_debut}`),
+        end: new Date(`${e.date}T${e.heure_fin}`),
+        ...e,
+      }));
+      setEvents(formatted);
+
+      alert("✅ Planning enregistré !");
     } catch (err) {
-      alert("❌ Erreur lors de la création");
+      alert("❌ Erreur lors de la création !");
       console.error(err);
     }
   };
+
 
   return (
     <div>
       <h2>Planning des Salariés</h2>
 
       <button onClick={() => setShowForm(true)}>➕ Ajouter un planning</button>
-
+      {!salaries.length ? <p>Chargement des salariés...</p> : (
+        <>
+          <label>Filtrer par salarié :</label>
+          <select value={selectedSalarieId || ""} onChange={(e) => setSelectedSalarieId(e.target.value || null)}>
+            <option disabled value="">-- Sélectionner un salarié --</option>
+            {salaries.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.nom} ({s.email})
+              </option>
+            ))}
+          </select>
+        </>
+      )}
       <Calendar
         localizer={localizer}
-        events={events}
+        events={eventsToDisplay} // ✅ Garde uniquement celle-ci
         startAccessor="start"
         endAccessor="end"
         views={["month", "week"]}
         view={view}
         onView={(v) => setView(v)}
-        date={date} // ✅ contrôle la date actuelle affichée
-        onNavigate={(newDate) => setDate(newDate)} // ✅ permet "Suivant", "Précédent", etc.
+        date={date}
+        onNavigate={(newDate) => setDate(newDate)}
         messages={messages}
         selectable
         onSelectSlot={(slotInfo) => {
@@ -99,34 +160,17 @@ const Planning = () => {
         }}
         style={{ height: 600, marginTop: "20px" }}
       />
+
       {showForm && (
-        <>
-          <div className="modal-overlay" onClick={() => setShowForm(false)} />
-          <div className="modal-content">
-            <h3>Ajouter un Planning</h3>
-            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <input name="date" type="date" required onChange={handleChange} value={form.date || ""} />
-              <input name="heure_debut" type="time" required onChange={handleChange} value={form.heure_debut || ""} />
-              <input name="heure_fin" type="time" required onChange={handleChange} value={form.heure_fin || ""} />
-              <input name="type_evenement" placeholder="Type (ex: Intervention)" onChange={handleChange} required />
-              <input name="objet" placeholder="Objet" onChange={handleChange} required />
-              <input name="prestation" placeholder="Prestation" onChange={handleChange} />
-              <input name="salarie_id" type="number" placeholder="ID Salarié" onChange={handleChange} required />
-              <input name="client_id" type="number" placeholder="ID Client" onChange={handleChange} required />
-              <select name="facturation" onChange={handleChange}>
-                <option value="">-- Facturation --</option>
-                <option value="Comptabilisé">Comptabilisé</option>
-                <option value="Non Comptabilisé">Non Comptabilisé</option>
-              </select>
-              <input name="taux_horaire" type="number" placeholder="Taux horaire (€)" onChange={handleChange} />
-              <input name="forfait_ht" type="number" placeholder="Forfait HT (€)" onChange={handleChange} />
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-                <button type="submit">✅ Enregistrer</button>
-                <button type="button" onClick={() => setShowForm(false)}>Annuler</button>
-              </div>
-            </form>
-          </div>
-        </>
+        <PlanningForm
+          form={form}
+          handleChange={handleChange}
+          handleSubmit={handleCreate}
+          onCancel={() => setShowForm(false)}
+          selectedSalarieId={selectedSalarieId}
+          salaries={salaries}
+        />
+
       )}
     </div>
   );

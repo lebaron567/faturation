@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"facturation-planning/config"
 	"facturation-planning/models"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -35,6 +36,12 @@ func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	config.DB.Create(&planning)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(planning)
+	if planning.SalarieID == 0 {
+		http.Error(w, "Le salarie_id est obligatoire", http.StatusBadRequest)
+		return
+	}
+	fmt.Printf("📥 Nouveau planning reçu : %+v\n", planning)
+
 }
 
 // @Summary Modifier un planning

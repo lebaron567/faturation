@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../axiosInstance"; // au lieu de "axios"
+
 
 const FactureForm = () => {
   const [facture, setFacture] = useState({

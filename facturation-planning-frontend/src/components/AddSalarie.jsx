@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../axiosInstance"; // au lieu de "axios"
+
 
 const AddSalarie = () => {
   const [form, setForm] = useState({
