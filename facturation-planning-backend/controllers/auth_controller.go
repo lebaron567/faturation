@@ -45,8 +45,11 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 
 	// Vérifier si l'email existe déjà
 	var existingEntreprise models.Entreprise
+	fmt.Printf("🔍 Vérification de l'existence de l'email : %s\n", input.Email)
+
 	if err := config.DB.Where("email = ?", input.Email).First(&existingEntreprise).Error; err == nil {
 		http.Error(w, "Cet email est déjà utilisé", http.StatusConflict)
+		fmt.Printf("❌ Email déjà utilisé : %s\n", input.Email)
 		return
 	}
 
@@ -71,6 +74,8 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erreur lors de la création du compte", http.StatusInternalServerError)
 		return
 	}
+	fmt.Printf("✅ Compte enregistré : %s (%s)\n", entreprise.Nom, entreprise.Email)
+
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Compte entreprise créé avec succès"})
@@ -109,6 +114,7 @@ func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 	result := config.DB.Where("email = ?", input.Email).First(&entreprise)
 	if result.Error != nil {
 		http.Error(w, "Compte non trouvé", http.StatusUnauthorized)
+		fmt.Println("❌ Compte non trouvé :", result.Error)
 		return
 	}
 
@@ -128,8 +134,10 @@ func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GenerateJWT(entreprise.ID)
 	if err != nil {
 		http.Error(w, "Erreur lors de la génération du token", http.StatusInternalServerError)
+		fmt.Println("❌ Erreur de génération du token :", err)
 		return
 	}
+	fmt.Printf("✅ Token généré pour l'entreprise : %s\n", entreprise.Email)
 
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
