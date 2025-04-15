@@ -11,6 +11,7 @@ const instance = axios.create({
 // Intercepteur pour ajouter automatiquement le token
 instance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+  console.log("🔐 Intercepteur axios → token :", token); // ← AJOUTE ÇA
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

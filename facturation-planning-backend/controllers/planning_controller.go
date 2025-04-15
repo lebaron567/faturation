@@ -79,6 +79,16 @@ func UpdatePlanning(w http.ResponseWriter, r *http.Request) {
 // @Router /plannings/{id} [delete]
 func DeletePlanning(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	config.DB.Delete(&models.Planning{}, id)
+	fmt.Println("🧨 Suppression demandée pour l'ID :", id)
+
+
+	// Suppression définitive sans passer par DeletedAt
+	if err := config.DB.Unscoped().Delete(&models.Planning{}, id).Error; err != nil {
+		fmt.Println("❌ Erreur de suppression :", err)
+		http.Error(w, "Erreur lors de la suppression", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("🗑️ Planning supprimé ID %s\n", id)
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -33,10 +33,13 @@ func SetupRoutes() *chi.Mux {
 	r.Post("/factures", controllers.CreateFacture)
 
 	// Plannings
-	r.Get("/plannings", controllers.GetPlannings)
-	r.Post("/plannings", controllers.CreatePlanning)
-	r.Put("/plannings/{id}", controllers.UpdatePlanning)
-	r.Delete("/plannings/{id}", controllers.DeletePlanning)
+	r.Route("/plannings", func(r chi.Router) {
+		r.Use(middlewares.JWTMiddleware)
+		r.Get("/", controllers.GetPlannings)
+		r.Post("/", controllers.CreatePlanning)
+		r.Put("/{id}", controllers.UpdatePlanning)
+		r.Delete("/{id}", controllers.DeletePlanning)
+	})
 
 
 	return r

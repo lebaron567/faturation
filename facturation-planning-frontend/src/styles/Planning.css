@@ -70,6 +70,8 @@ html, body, #root {
   z-index: 1000;
   border-radius: 6px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: top 0.15s ease, left 0.15s ease;
+
 }
 .context-menu button {
   margin-top: 8px;
@@ -83,4 +85,9 @@ html, body, #root {
 }
 .context-menu button:hover {
   background-color: #0056b3;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.rbc-event {
+  cursor: context-menu !important;
 }
