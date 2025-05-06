@@ -1,0 +1,25 @@
+.planning-sidebar {
+    width: 240px;
+    background-color: #f8f8f8;
+    border-right: 1px solid #ccc;
+    padding: 15px;
+    height: 100vh;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .planning-sidebar h3 {
+    margin-top: 0;
+  }
+  
+  .planning-sidebar label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  
+  .planning-sidebar select {
+    width: 100%;
+    padding: 6px;
+    margin-top: 5px;
+  }
+  

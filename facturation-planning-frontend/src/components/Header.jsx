@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const Header = ({ isAuthenticated, setIsAuthenticated }) => {
+const Header = ({ isAuthenticated, setIsAuthenticated, toggleSidebar }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -10,9 +10,13 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
     navigate("/login"); // 🔄 Redirige vers la page de connexion
   };
 
+
   return (
     <header>
-      
+      <button onClick={toggleSidebar} style={{ marginRight: "20px" }}>
+        📂
+      </button>
+
       {isAuthenticated && <button onClick={handleLogout}>🚪 Se déconnecter</button>}
     </header>
   );

@@ -16,13 +16,18 @@ export const handleCreate = async (
 ) => {
   e.preventDefault();
 
+  if (!selectedSalarieId || selectedSalarieId === "0") {
+    alert("❌ Veuillez sélectionner un salarié valide !");
+    return;
+  }
+
   try {
     const profile = await fetchProfile();
     const entrepriseId = profile.data.id;
 
     const payload = {
       ...form,
-      salarie_id: selectedSalarieId,
+      salarie_id: parseInt(selectedSalarieId),
       entreprise_id: entrepriseId,
     };
 
@@ -84,42 +89,7 @@ export async function handleDelete(event, setEvents) {
 }
 
 
-export async function handleCopy(eventToCopy, setEvents, setSelectedEvent) {
 
-
-  
-  const payload = {
-    ...eventToCopy,
-    title: `[COPIE] ${eventToCopy.title}`,
-    objet: `${eventToCopy.objet} (copie)`,
-    date: eventToCopy.date,
-    heure_debut: eventToCopy.heure_debut,
-    heure_fin: eventToCopy.heure_fin,
-    type_evenement: eventToCopy.type_evenement,
-    prestation: eventToCopy.prestation,
-    client_id: eventToCopy.client_id,
-    facturation: eventToCopy.facturation,
-    taux_horaire: eventToCopy.taux_horaire,
-    forfait_ht: eventToCopy.forfait_ht,
-    salarie_id: eventToCopy.salarie_id,
-    entreprise_id: eventToCopy.entreprise_id,
-  };
-
-  delete payload.id; // ⚠️ Supprimer l'ID original
-
-  try {
-    const res = await axios.post("http://localhost:8080/plannings", payload);
-
-    const updated = await fetchPlannings();
-    setEvents(formatEventsFromApi(updated.data));
-
-    alert("📋 Copie enregistrée !");
-    setSelectedEvent(null);
-  } catch (err) {
-    console.error("❌ Erreur copie :", err);
-    alert("Erreur lors de la copie !");
-  }
-}
 
 export function copyEventToClipboardAndForm(event, setForm, setShowForm) {
   const content = `
