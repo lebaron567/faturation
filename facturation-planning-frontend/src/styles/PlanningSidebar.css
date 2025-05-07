@@ -23,3 +23,15 @@
     margin-top: 5px;
   }
   
+
+  .reset-filters-button {
+    margin-top: 20px;
+    padding: 6px 10px;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .reset-filters-button:hover {
+    background-color: #ddd;
+  }

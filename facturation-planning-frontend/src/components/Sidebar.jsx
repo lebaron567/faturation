@@ -3,18 +3,21 @@ import { Link } from "react-router-dom";
 import "../styles/Sidebar.css";
 
 const Sidebar = ({ collapsed, toggleSidebar }) => {
+  if (collapsed) return null; // ← Ne rien afficher si replié
+
   return (
-    <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      <button className="toggle-button" onClick={toggleSidebar}>
-        {collapsed ? "➡️" : "⬅️"}
+    <div className="sidebar">
+      <button className="retract-button" onClick={toggleSidebar}>
+        ⬅️
       </button>
 
-      <div className={`sidebar-content ${collapsed ? "hidden" : ""}`}>
+      <div className="sidebar-content">
         <h3>📋 Menu</h3>
         <nav>
           <Link to="/">Accueil</Link>
           <Link to="/planning">Planning</Link>
           <Link to="/factures">Factures</Link>
+          <Link to="/clients/ajouter">Client</Link>
           <Link to="/salarie/ajouter">Ajouter salarié</Link>
           <Link to="/login">Connexion</Link>
         </nav>

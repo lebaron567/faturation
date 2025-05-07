@@ -40,7 +40,7 @@ func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Le salarie_id est obligatoire", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("📥 Nouveau planning reçu : %+v\n", planning)
+
 
 }
 

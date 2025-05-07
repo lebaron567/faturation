@@ -7,12 +7,16 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Header from "./components/Header";
 import AddSalarie from "./components/AddSalarie";
-import Sidebar from "./components/Sidebar";
+import Sidebar from "./components/Sidebar"; import AjouterClient from "./components/AjouterClient";
+
+// ...
+
 import "./App.css"; // Assure-toi d'importer les styles
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  
 
   useEffect(() => {
     setIsAuthenticated(!!localStorage.getItem("token"));
@@ -34,6 +38,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/clients/ajouter" element={<AjouterClient />} />
             <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/login" />} />
             <Route path="/factures" element={isAuthenticated ? <FactureForm /> : <Navigate to="/login" />} />
             <Route path="/planning" element={isAuthenticated ? <Planning /> : <Navigate to="/login" />} />

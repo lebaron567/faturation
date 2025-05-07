@@ -1,0 +1,62 @@
+Pas de souci ! Voici comment faire une requête **manuelle** dans PostgreSQL depuis le terminal `psql` :
+
+---
+
+### ✅ 1. **Lancer le client PostgreSQL**
+
+```bash
+psql -U ton_utilisateur -d nom_de_ta_base
+```
+
+> Exemple :
+
+```bash
+psql -U postgres -d facturation
+```
+
+---
+
+### ✅ 2. **Lister les tables**
+
+```sql
+\dt
+```
+
+---
+
+### ✅ 3. **Faire une requête manuelle (SELECT, INSERT, etc.)**
+
+#### Lire des données
+
+```sql
+SELECT * FROM plannings;
+```
+
+#### Insérer un enregistrement
+
+```sql
+INSERT INTO plannings (date, heure_debut, heure_fin, type_evenement, salarie_id, client_id, objet, prestation, facturation, taux_horaire, forfait_ht, entreprise_id)
+VALUES ('2025-04-20', '09:00', '10:00', 'Intervention', 1, 2, 'Support', 'Comptable', 'Comptabilisé', 40, 0, 1);
+```
+
+#### Supprimer
+
+```sql
+DELETE FROM plannings WHERE id = 42;
+```
+
+#### Mettre à jour
+
+```sql
+UPDATE plannings SET objet = 'MAJ test' WHERE id = 42;
+```
+
+---
+
+### ✅ 4. **Quitter `psql`**
+
+```sql
+\q
+```
+
+Tu veux un exemple spécifique de requête pour corriger un `salarie_id` invalide, par exemple ?

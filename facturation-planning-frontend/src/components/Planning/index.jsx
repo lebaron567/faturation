@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { DnDCalendar, localizer } from "./DnDCalendar";
 import { calendarMessages } from "./messages";
 import { handleCreate, handleEventDrop, handleDelete, copyEventToClipboardAndForm } from "./handlers";
-import { fetchPlannings, fetchSalaries } from "./api";
+import { fetchPlannings, fetchSalaries, fetchClients } from "./api";
 import { formatEventsFromApi, extractDateInfo, handleChange } from "./utils";
 import PlanningForm from "./PlanningForm";
 import CustomEvent from "./CustomEvent";
@@ -22,11 +22,15 @@ const Planning = () => {
   const [date, setDate] = useState(new Date());
   const [view, setView] = useState("week");
   const [contextPosition, setContextPosition] = useState({ x: 0, y: 0 });
+  const [clients, setClients] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState(null);
+
 
 
   // 🆕 Pour gérer le clic sur un événement
   const [selectedEvent, setSelectedEvent] = useState(null);
   const menuRef = useRef();
+
 
   useEffect(() => {
     const escListener = (e) => {
@@ -68,13 +72,22 @@ const Planning = () => {
     fetchPlannings().then((res) => {
       setEvents(formatEventsFromApi(res.data));
     });
+    fetchClients().then((res) => {
+      setClients(res.data);
+    });
   }, []);
 
-  const filteredEvents = selectedSalarieId
-    ? events.filter((e) => String(e.salarie_id) === String(selectedSalarieId))
-    : events;
-
-
+  let filteredEvents = events;
+  if (selectedSalarieId) {
+    filteredEvents = filteredEvents.filter(
+      (e) => String(e.salarie_id) === String(selectedSalarieId)
+    );
+  }
+  if (selectedClientId) {
+    filteredEvents = filteredEvents.filter(
+      (e) => String(e.client_id) === String(selectedClientId)
+    );
+  }
 
   // 🆕 Gestion du clic droit pour le menu contextuel
   useEffect(() => {
@@ -98,8 +111,12 @@ const Planning = () => {
         salaries={salaries}
         selectedSalarieId={selectedSalarieId}
         setSelectedSalarieId={setSelectedSalarieId}
+        clients={clients}
+        selectedClientId={selectedClientId}
+        setSelectedClientId={setSelectedClientId}
       />
-
+   
+   
 
       <div className="planning-main-content" onContextMenu={(e) => e.preventDefault()}>
         <h2>Planning des Salariés</h2>
@@ -192,6 +209,7 @@ const Planning = () => {
             }
             selectedSalarieId={selectedSalarieId}
             salaries={salaries}
+            clients={clients} // ✅ ajoute ici
             onCancel={() => setShowForm(false)}
           />
         )}

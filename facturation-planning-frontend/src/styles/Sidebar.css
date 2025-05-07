@@ -3,52 +3,53 @@
     top: 0;
     left: 0;
     height: 100vh;
-    width: 200px;
-    background-color: #1d2a3a;
-    color: white;
+    width: 220px;
+    background-color: #1e2a38;
+    color: #fff;
     padding: 20px;
-    transition: width 0.3s ease, opacity 0.3s ease;
-    overflow: hidden;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-}
-
-.sidebar.collapsed {
-    width: 0;
-    padding: 0;
-    border: none;
-}
-
-.sidebar.collapsed .toggle-button {
-    display: none; /* ou repositionne-le ailleurs */
+    transition: transform 0.3s ease;
   }
-
-.sidebar h3,
-.sidebar a {
-    transition: opacity 0.3s ease;
-    white-space: nowrap;
-    display: block;
-    opacity: 1;
-}
-
-.sidebar.collapsed h3,
-.sidebar.collapsed a {
-    opacity: 0;
-}
-
-/* Le bouton pour replier/déplier */
-.toggle-button {
-    background: transparent;
-    border: none;
+  
+  .sidebar.hidden {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar h3 {
+    font-size: 18px;
+    color: #a5c0e0;
+    margin-bottom: 20px;
+  }
+  
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .sidebar a {
+    color: #dbe7f5;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, padding-left 0.2s;
+  }
+  
+  .sidebar a:hover {
+    background-color: #2e3d52;
+    padding-left: 18px;
+  }
+  
+  /* Bouton de repli */
+  .retract-button {
+    background: #2e3d52;
     color: white;
-    font-size: 20px;
+    border: none;
+    font-size: 16px;
+    padding: 6px 10px;
     cursor: pointer;
     margin-bottom: 20px;
-    display: block;
-    margin: 0 auto 20px auto;
-    /* centré horizontalement */
-}
-
-.sidebar-content.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
+    border-radius: 4px;
+  }

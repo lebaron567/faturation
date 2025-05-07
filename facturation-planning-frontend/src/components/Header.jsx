@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/Header.css"; // Assurez-vous d'importer le fichier CSS pour le style
 
 const Header = ({ isAuthenticated, setIsAuthenticated, toggleSidebar }) => {
   const navigate = useNavigate();

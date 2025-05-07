@@ -7,6 +7,7 @@ const PlanningForm = ({
   onCancel,
   selectedSalarieId,
   salaries,
+  clients,
 }) => {
   return (
     <>
@@ -74,14 +75,19 @@ const PlanningForm = ({
               ))}
           </select>
 
-          <input
+          <select
             name="client_id"
-            type="number"
-            placeholder="ID Client"
             onChange={handleChange}
             value={form.client_id || ""}
             required
-          />
+          >
+            <option value="">-- Sélectionner un client --</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nom} ({c.email})
+              </option>
+            ))}
+          </select>
           <select
             name="facturation"
             onChange={handleChange}

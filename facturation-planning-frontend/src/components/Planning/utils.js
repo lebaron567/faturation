@@ -29,6 +29,13 @@ export const extractDateInfo = (slot) => ({
 });
 
 export const handleChange = (e, form, setForm) => {
-  setForm({ ...form, [e.target.name]: e.target.value });
+  const { name, value } = e.target;
+  const numericFields = ["salarie_id", "client_id", "taux_horaire", "forfait_ht"];
+
+  setForm({
+    ...form,
+    [name]: numericFields.includes(name) ? parseFloat(value) : value,
+  });
 };
+
 

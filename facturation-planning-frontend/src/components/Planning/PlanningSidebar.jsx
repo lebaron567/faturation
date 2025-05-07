@@ -1,7 +1,12 @@
 import React from "react";
 import "../../styles/PlanningSidebar.css";
 
-const PlanningSidebar = ({ salaries, selectedSalarieId, setSelectedSalarieId }) => {
+const PlanningSidebar = ({ salaries,
+    selectedSalarieId,
+    setSelectedSalarieId,
+    clients,
+    selectedClientId,
+    setSelectedClientId, }) => {
     return (
         <div className="planning-sidebar">
             <h3>Filtres</h3>
@@ -28,7 +33,17 @@ const PlanningSidebar = ({ salaries, selectedSalarieId, setSelectedSalarieId }) 
             <select><option>Tous</option></select>
 
             <label>Client</label>
-            <select><option>Client</option></select>
+            <select
+                value={selectedClientId || ""}
+                onChange={(e) => setSelectedClientId(e.target.value || null)}
+            >
+                <option value="">Tous</option>
+                {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                        {c.nom} ({c.email})
+                    </option>
+                ))}
+            </select>
 
             <label>Voir</label>
             <select><option>Tous</option></select>

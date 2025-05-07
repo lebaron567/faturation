@@ -32,6 +32,11 @@ func SetupRoutes() *chi.Mux {
 	r.Get("/factures", controllers.GetFactures)
 	r.Post("/factures", controllers.CreateFacture)
 
+	r.Route("/clients", func(r chi.Router) {
+		r.Get("/", controllers.GetClients)
+		r.Post("/", controllers.CreateClient)
+	})
+
 	// Plannings
 	r.Route("/plannings", func(r chi.Router) {
 		r.Use(middlewares.JWTMiddleware)
