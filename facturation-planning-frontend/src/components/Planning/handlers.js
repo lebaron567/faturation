@@ -16,18 +16,27 @@ export const handleCreate = async (
 ) => {
   e.preventDefault();
 
-  if (!selectedSalarieId || selectedSalarieId === "0") {
-    alert("❌ Veuillez sélectionner un salarié valide !");
-    return;
-  }
-
   try {
     const profile = await fetchProfile();
     const entrepriseId = profile.data.id;
 
+    const salarieId = form.salarie_id || selectedSalarieId;
+    const clientId = form.client_id;
+
+    if (!salarieId) {
+      alert("❌ Veuillez sélectionner un salarié valide !");
+      return;
+    }
+
+    if (!clientId) {
+      alert("❌ Veuillez sélectionner un client valide !");
+      return;
+    }
+
     const payload = {
       ...form,
-      salarie_id: parseInt(selectedSalarieId),
+      salarie_id: salarieId,
+      client_id: clientId,
       entreprise_id: entrepriseId,
     };
 
@@ -73,10 +82,10 @@ export async function handleDelete(event, setEvents) {
 
   try {
     await axios.delete(`http://localhost:8080/plannings/${event.id}`);
-    
+
     // 🧠 Option 1 : suppression locale (si API ne renvoie rien)
     setEvents((prev) => prev.filter((e) => e.id !== event.id));
-    
+
     // ✅ Option 2 : meilleure approche = recharger la liste
     // const res = await fetchPlannings();
     // setEvents(formatEventsFromApi(res.data));
@@ -104,7 +113,7 @@ export function copyEventToClipboardAndForm(event, setForm, setShowForm) {
   navigator.clipboard.writeText(content)
     .then(() => {
       alert("📋 Infos copiées dans le presse-papiers !");
-      
+
       // ✅ Remplit bien tous les champs
       setForm({
         date: event.date,

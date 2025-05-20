@@ -1,5 +1,6 @@
 import axios from "../axiosInstance";
 import { useEffect, useState } from "react";
+import "../styles/AjouterClient.css";
 
 const AjouterClient = () => {
   const [form, setForm] = useState({

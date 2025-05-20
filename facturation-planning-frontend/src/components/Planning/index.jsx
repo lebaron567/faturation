@@ -67,7 +67,6 @@ const Planning = () => {
   useEffect(() => {
     fetchSalaries().then((res) => {
       setSalaries(res.data);
-      if (res.data.length > 0) setSelectedSalarieId(res.data[0].id);
     });
     fetchPlannings().then((res) => {
       setEvents(formatEventsFromApi(res.data));
@@ -78,12 +77,12 @@ const Planning = () => {
   }, []);
 
   let filteredEvents = events;
-  if (selectedSalarieId) {
+  if (selectedSalarieId && selectedSalarieId !== "") {
     filteredEvents = filteredEvents.filter(
       (e) => String(e.salarie_id) === String(selectedSalarieId)
     );
   }
-  if (selectedClientId) {
+  if (selectedClientId && selectedClientId !== "") {
     filteredEvents = filteredEvents.filter(
       (e) => String(e.client_id) === String(selectedClientId)
     );
@@ -103,6 +102,11 @@ const Planning = () => {
     };
   }, []);
 
+  const getClientName = (clientId) => {
+    const client = clients.find((c) => c.id === clientId);
+    return client ? `${client.nom} (${client.email})` : `ID: ${clientId}`;
+  };
+
 
 
   return (
@@ -115,8 +119,8 @@ const Planning = () => {
         selectedClientId={selectedClientId}
         setSelectedClientId={setSelectedClientId}
       />
-   
-   
+
+
 
       <div className="planning-main-content" onContextMenu={(e) => e.preventDefault()}>
         <h2>Planning des Salariés</h2>
@@ -131,6 +135,7 @@ const Planning = () => {
           onEventResize={(info) => handleEventDrop(info, setEvents)}
           min={new Date(0, 0, 0, 7, 0)} // 👈 début à 6h
           max={new Date(0, 0, 0, 19, 0)} // (optionnel) fin à 22h par exemple
+          dayLayoutAlgorithm="no-overlap"
           onSelectEvent={(event, e) => {
             if (e.type === "contextmenu") {
               e.preventDefault(); // ⛔ empêche le menu du navigateur
@@ -187,7 +192,7 @@ const Planning = () => {
             <p><strong>Date :</strong> {selectedEvent.date}</p>
             <p><strong>Heure :</strong> {selectedEvent.heure_debut} - {selectedEvent.heure_fin}</p>
             <p><strong>Prestation :</strong> {selectedEvent.prestation}</p>
-            <p><strong>Client :</strong> {selectedEvent.client_id}</p>
+            <p><strong>Client :</strong> {getClientName(selectedEvent.client_id)}</p>
             <p><strong>Facturation :</strong> {selectedEvent.facturation}</p>
             <p><strong>Taux horaire :</strong> {selectedEvent.taux_horaire} €</p>
             <p><strong>Forfait HT :</strong> {selectedEvent.forfait_ht} €</p>

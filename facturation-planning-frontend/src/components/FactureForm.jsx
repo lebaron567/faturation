@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "../axiosInstance"; // au lieu de "axios"
+import "../styles/FactureForm.css";
 
 
 const FactureForm = () => {
@@ -45,7 +46,6 @@ const FactureForm = () => {
 
         <label>TVA (%) :</label>
         <input name="tva" type="number" value={facture.tva} onChange={handleChange} required />
-
         <button type="submit">Générer la facture</button>
       </form>
 

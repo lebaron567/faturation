@@ -16,15 +16,14 @@ const PlanningSidebar = ({ salaries,
                 value={selectedSalarieId || ""}
                 onChange={(e) => setSelectedSalarieId(e.target.value || null)}
             >
-                <option disabled value="">
-                    -- Sélectionner un salarié --
-                </option>
+                <option value="">Tous</option> {/* ✅ modifié ici */}
                 {salaries.map((s) => (
                     <option key={s.id} value={s.id}>
                         {s.nom} ({s.email})
                     </option>
                 ))}
             </select>
+
 
             <label>Entité</label>
             <select><option>Tous</option></select>
@@ -47,8 +46,18 @@ const PlanningSidebar = ({ salaries,
 
             <label>Voir</label>
             <select><option>Tous</option></select>
+            <button
+                onClick={() => {
+                    setSelectedSalarieId(null);
+                    setSelectedClientId(null);
+                }}
+                style={{ marginTop: "10px" }}
+            >
+                🔄 Réinitialiser
+            </button>
         </div>
     );
+
 };
 
 export default PlanningSidebar;

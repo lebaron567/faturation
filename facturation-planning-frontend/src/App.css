@@ -1,18 +1,22 @@
-/* Structure de toute l'application */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* empêche le scroll global */
+}
+
 .app-layout {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
-/* Zone principale */
 .main-content {
   flex-grow: 1;
-  transition: margin-left 0.3s ease;
-
-  background-color: #f5f5f5;
-  overflow-y: auto;
-  transition: padding-left 0.3s ease;
-
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* ⛔ empêche une scrollbar inutile */
 }
 
-
+.main-content > * {
+  overflow: hidden;
+}
