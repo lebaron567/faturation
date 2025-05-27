@@ -39,6 +39,14 @@ const PlanningForm = ({
             onChange={handleChange}
             value={form.heure_fin || ""}
           />
+          <label>Nombre de répétitions (par semaines)</label>
+          <input
+            type="number"
+            name="nb_repetitions"
+            value={form.nb_repetitions || 1}
+            onChange={handleChange}
+            min="1"
+          />
           <input
             name="type_evenement"
             placeholder="Type (ex: Intervention)"

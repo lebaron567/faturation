@@ -13,6 +13,7 @@ export const handleCreate = async (
   setForm,
   setShowForm,
   setEvents
+
 ) => {
   e.preventDefault();
 
@@ -38,6 +39,9 @@ export const handleCreate = async (
       salarie_id: salarieId,
       client_id: clientId,
       entreprise_id: entrepriseId,
+      nb_repetitions: parseInt(form.nb_repetitions) || 1, // ✅ c'est ce champ que le backend utilise
+
+
     };
 
     await createPlanning(payload);

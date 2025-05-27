@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"log"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 )
 
@@ -32,17 +35,43 @@ func GetPlannings(w http.ResponseWriter, r *http.Request) {
 // @Router /plannings [post]
 func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	var planning models.Planning
-	json.NewDecoder(r.Body).Decode(&planning)
-	config.DB.Create(&planning)
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(planning)
-	if planning.SalarieID == 0 {
-		http.Error(w, "Le salarie_id est obligatoire", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&planning); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	if planning.NbRepetitions <= 0 {
+		planning.NbRepetitions = 1
+	}
 
+	date, err := time.Parse("2006-01-02", planning.Date)
+	if err != nil {
+		http.Error(w, "Date invalide", http.StatusBadRequest)
+		return
+	}
+
+	var createdPlannings []models.Planning
+
+	for i := 0; i < planning.NbRepetitions; i++ {
+		newDate := date.AddDate(0, 0, i*7)
+		copyPlanning := planning
+		copyPlanning.ID = 0
+		copyPlanning.Date = newDate.Format("2006-01-02")
+
+		if err := config.DB.Create(&copyPlanning).Error; err != nil {
+			log.Println("❌ Erreur lors de la création répétée :", err)
+			continue
+		}
+
+		createdPlannings = append(createdPlannings, copyPlanning)
+	}
+
+	// Renvoie tous les plannings créés
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(createdPlannings)
 }
+
+
 
 // @Summary Modifier un planning
 // @Description Met à jour un planning existant par son ID
@@ -80,7 +109,6 @@ func UpdatePlanning(w http.ResponseWriter, r *http.Request) {
 func DeletePlanning(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	fmt.Println("🧨 Suppression demandée pour l'ID :", id)
-
 
 	// Suppression définitive sans passer par DeletedAt
 	if err := config.DB.Unscoped().Delete(&models.Planning{}, id).Error; err != nil {

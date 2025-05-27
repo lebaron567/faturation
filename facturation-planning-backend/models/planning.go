@@ -27,6 +27,8 @@ type Planning struct {
 	TauxHoraire  float64 `json:"taux_horaire"`
 	ForfaitHT    float64 `json:"forfait_ht"`
 	EntrepriseID uint    `json:"entreprise_id"`
+	Periodicite int `json:"periodicite"`
+	NbRepetitions  int `json:"nb_repetitions"`  // combien de fois on le répète
 
 	Facture *Facture `json:"facture,omitempty" gorm:"foreignKey:PlanningID"`
 }
