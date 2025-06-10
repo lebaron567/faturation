@@ -12,6 +12,9 @@ func MigrateDB() {
 		&models.Salarie{},
 		&models.Facture{},
 		&models.Planning{},
+		&models.Client{},
+		&models.Devis{},
+		&models.LigneDevis{},
 	)
 
 	if err != nil {

@@ -1,5 +1,28 @@
 basePath: /
 definitions:
+  models.Client:
+    properties:
+      adresse:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      email:
+        type: string
+      entreprise_id:
+        type: integer
+      id:
+        type: integer
+      nom:
+        type: string
+      telephone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Devis:
+    type: object
   models.Entreprise:
     properties:
       adresse:
@@ -102,25 +125,24 @@ definitions:
     type: object
   models.Planning:
     properties:
+      client:
+        allOf:
+        - $ref: '#/definitions/models.Client'
+        description: <-- ajoute cette ligne
       client_id:
         type: integer
       created_at:
-        example: "2025-03-17T14:09:30.706109+01:00"
         type: string
       date:
         type: string
       deleted_at:
         type: string
       entreprise_id:
-        example: 5
         type: integer
       facturation:
-        description: '"Comptabilisé" / "Non Comptabilisé"'
         type: string
       facture:
-        allOf:
-        - $ref: '#/definitions/models.Facture'
-        description: Relation avec Facture (optionnel)
+        $ref: '#/definitions/models.Facture'
       forfait_ht:
         type: number
       heure_debut:
@@ -128,21 +150,27 @@ definitions:
       heure_fin:
         type: string
       id:
-        example: 1
+        type: integer
+      nb_repetitions:
+        description: combien de fois on le répète
         type: integer
       objet:
         type: string
+      periodicite:
+        type: integer
       prestation:
         type: string
+      salarie:
+        allOf:
+        - $ref: '#/definitions/models.Salarie'
+        description: ✅ Corrigé
       salarie_id:
         type: integer
       taux_horaire:
         type: number
       type_evenement:
-        description: '"Intervention", "Réunion", etc.'
         type: string
       updated_at:
-        example: "2025-03-17T14:09:30.706109+01:00"
         type: string
     type: object
   models.RegisterEntrepriseRequest:
@@ -190,6 +218,37 @@ info:
   title: Facturation API
   version: "1.0"
 paths:
+  /devis:
+    post:
+      consumes:
+      - application/json
+      description: Crée un devis avec les informations client, les dates et les lignes
+        de devis
+      parameters:
+      - description: Données du devis à créer
+        in: body
+        name: devis
+        required: true
+        schema:
+          $ref: '#/definitions/models.Devis'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Devis'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer un devis complet
+      tags:
+      - Devis
   /factures:
     get:
       description: Retourne la liste complète des factures en base de données

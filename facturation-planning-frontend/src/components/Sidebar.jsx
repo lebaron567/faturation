@@ -17,6 +17,8 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
           <Link to="/">Accueil</Link>
           <Link to="/planning">Planning</Link>
           <Link to="/factures">Factures</Link>
+          <Link to="/devis">Créer un devis</Link>
+          <Link to="/documents">Documents</Link> {/* ← lien vers GestionDocuments */}
           <Link to="/clients/ajouter">Client</Link>
           <Link to="/salarie/ajouter">Ajouter salarié</Link>
           <Link to="/login">Connexion</Link>

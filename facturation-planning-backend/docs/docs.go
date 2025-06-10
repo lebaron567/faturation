@@ -15,6 +15,52 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/devis": {
+            "post": {
+                "description": "Crée un devis avec les informations client, les dates et les lignes de devis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Créer un devis complet",
+                "parameters": [
+                    {
+                        "description": "Données du devis à créer",
+                        "name": "devis",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/factures": {
             "get": {
                 "description": "Retourne la liste complète des factures en base de données",
@@ -450,6 +496,41 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.Client": {
+            "type": "object",
+            "properties": {
+                "adresse": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "entreprise_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nom": {
+                    "type": "string"
+                },
+                "telephone": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Devis": {
+            "type": "object"
+        },
         "models.Entreprise": {
             "type": "object",
             "properties": {
@@ -589,12 +670,19 @@ const docTemplate = `{
         "models.Planning": {
             "type": "object",
             "properties": {
+                "client": {
+                    "description": "\u003c-- ajoute cette ligne",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Client"
+                        }
+                    ]
+                },
                 "client_id": {
                     "type": "integer"
                 },
                 "created_at": {
-                    "type": "string",
-                    "example": "2025-03-17T14:09:30.706109+01:00"
+                    "type": "string"
                 },
                 "date": {
                     "type": "string"
@@ -603,20 +691,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "entreprise_id": {
-                    "type": "integer",
-                    "example": 5
+                    "type": "integer"
                 },
                 "facturation": {
-                    "description": "\"Comptabilisé\" / \"Non Comptabilisé\"",
                     "type": "string"
                 },
                 "facture": {
-                    "description": "Relation avec Facture (optionnel)",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Facture"
-                        }
-                    ]
+                    "$ref": "#/definitions/models.Facture"
                 },
                 "forfait_ht": {
                     "type": "number"
@@ -628,14 +709,28 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "integer"
+                },
+                "nb_repetitions": {
+                    "description": "combien de fois on le répète",
+                    "type": "integer"
                 },
                 "objet": {
                     "type": "string"
                 },
+                "periodicite": {
+                    "type": "integer"
+                },
                 "prestation": {
                     "type": "string"
+                },
+                "salarie": {
+                    "description": "✅ Corrigé",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Salarie"
+                        }
+                    ]
                 },
                 "salarie_id": {
                     "type": "integer"
@@ -644,12 +739,10 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "type_evenement": {
-                    "description": "\"Intervention\", \"Réunion\", etc.",
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string",
-                    "example": "2025-03-17T14:09:30.706109+01:00"
+                    "type": "string"
                 }
             }
         },
