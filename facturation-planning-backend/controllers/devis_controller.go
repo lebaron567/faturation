@@ -1,24 +1,20 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"facturation-planning/config"
 	"facturation-planning/models"
 	"fmt"
+	"html/template"
+	"io"
 	"net/http"
+
+	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
+	"github.com/go-chi/chi"
 )
 
 // CreateDevis godoc
-// @Summary Créer un devis complet
-// @Description Crée un devis avec les informations client, les dates et les lignes de devis
-// @Tags Devis
-// @Accept json
-// @Produce json
-// @Param devis body models.Devis true "Données du devis à créer"
-// @Success 201 {object} models.Devis
-// @Failure 400 {string} string "Requête invalide"
-// @Failure 500 {string} string "Erreur serveur"
-// @Router /devis [post]
 func CreateDevis(w http.ResponseWriter, r *http.Request) {
 	var devis models.Devis
 
@@ -27,15 +23,497 @@ func CreateDevis(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("➡️ Devis reçu : %+v\n", devis) // 👈 ajoute ce log
+	// Validation des données du devis
+	if err := validateDevisData(&devis); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	// Création du devis + lignes associées (cascade via GORM)
+	// Définir le statut par défaut si non spécifié
+	if devis.Statut == "" {
+		devis.Statut = "brouillon"
+	}
+
 	if err := config.DB.Create(&devis).Error; err != nil {
-		fmt.Printf("❌ ERREUR INSERT : %v\n", err) // 👈 log erreur
+		fmt.Printf("❌ ERREUR INSERT : %v\n", err)
 		http.Error(w, "Erreur lors de la création du devis", http.StatusInternalServerError)
 		return
 	}
 
+	// Récupérer le devis créé avec les relations
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").First(&devis, devis.ID).Error; err != nil {
+		http.Error(w, "Erreur lors de la récupération du devis créé", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculer les totaux
+	calculateTotals(&devis)
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(devis)
+}
+
+// GetAllDevis godoc
+func GetAllDevis(w http.ResponseWriter, r *http.Request) {
+	var devis []models.Devis
+
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").Find(&devis).Error; err != nil {
+		http.Error(w, "Erreur lors de la récupération des devis", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculer les totaux pour chaque devis
+	for i := range devis {
+		calculateTotals(&devis[i])
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(devis)
+}
+
+type LigneDevis struct {
+	Designation  string
+	Unite        string
+	Quantite     float64
+	PrixUnitaire float64
+	MontantHT    float64
+	TVA          float64
+	MontantTTC   float64
+}
+
+type DevisPDFData struct {
+	Reference       string
+	Ville           string
+	DateEdition     string
+	DateExpiration  string
+	ClientNom       string
+	ClientAdresse   string
+	ClientEmail     string
+	ClientTelephone string
+	Conditions      string
+	Lignes          []LigneDevis
+	SousTotalHT     float64
+	TotalTVA        float64
+	TotalTTC        float64
+	Objet           string
+	Company         config.CompanyInfo
+}
+
+func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var devis models.Devis
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").First(&devis, id).Error; err != nil {
+		http.Error(w, "Devis introuvable", http.StatusNotFound)
+		return
+	}
+
+	// Transformation pour le template avec calculs
+	var lignes []LigneDevis
+	var sousTotalHT, totalTVA, totalTTC float64
+
+	for _, l := range devis.Lignes {
+		montantHT := float64(l.Quantite) * l.PrixUnitaire
+		montantTVA := montantHT * (l.TVA / 100)
+		montantTTC := montantHT + montantTVA
+
+		lignes = append(lignes, LigneDevis{
+			Designation:  l.Description,
+			Unite:        "U", // Unité par défaut, peut être modifiée
+			Quantite:     float64(l.Quantite),
+			PrixUnitaire: l.PrixUnitaire,
+			MontantHT:    montantHT,
+			TVA:          l.TVA,
+			MontantTTC:   montantTTC,
+		})
+
+		sousTotalHT += montantHT
+		totalTVA += montantTVA
+		totalTTC += montantTTC
+	}
+
+	// Formatage des dates
+	dateEdition := devis.DateDevis.Format("02 janvier 2006")
+	dateExpiration := devis.DateExpiration.Format("02 janvier 2006")
+
+	// Génération de l'objet du devis
+	objet := devis.Objet
+	if objet == "" {
+		objet = fmt.Sprintf("Devis pour %s", devis.Client.Nom)
+	}
+
+	// Informations de l'entreprise
+	company := config.GetCompanyInfo()
+	devisConfig := config.GetDevisConfig()
+
+	data := DevisPDFData{
+		Reference:       fmt.Sprintf("%s%04d", devisConfig.NumberingPrefix, devis.ID),
+		Ville:           devisConfig.DefaultCity,
+		DateEdition:     dateEdition,
+		DateExpiration:  dateExpiration,
+		ClientNom:       devis.Client.Nom,
+		ClientAdresse:   devis.Client.Adresse,
+		ClientEmail:     devis.Client.Email,
+		ClientTelephone: devis.Client.Telephone,
+		Conditions:      devis.Conditions,
+		Lignes:          lignes,
+		SousTotalHT:     sousTotalHT,
+		TotalTVA:        totalTVA,
+		TotalTTC:        totalTTC,
+		Objet:           objet,
+		Company:         company,
+	}
+
+	// Template FuncMap avec fonctions utiles
+	funcMap := template.FuncMap{
+		"add": func(a, b int) int { return a + b },
+		"formatPrice": func(price float64) string {
+			return fmt.Sprintf("%.2f €", price)
+		},
+		"formatPercent": func(percent float64) string {
+			return fmt.Sprintf("%.1f%%", percent)
+		},
+	}
+
+	tmpl, err := template.New("devis_improved.html").Funcs(funcMap).ParseFiles("templates/devis_improved.html")
+	if err != nil {
+		http.Error(w, "Erreur chargement template", http.StatusInternalServerError)
+		return
+	}
+
+	var htmlBuffer bytes.Buffer
+	if err := tmpl.Execute(&htmlBuffer, data); err != nil {
+		http.Error(w, "Erreur exécution template", http.StatusInternalServerError)
+		return
+	}
+
+	pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	if err != nil {
+		http.Error(w, "Erreur PDF", http.StatusInternalServerError)
+		return
+	}
+
+	// Configuration du PDF
+	pdfg.Dpi.Set(300)
+	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
+	pdfg.Grayscale.Set(false)
+	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
+
+	page := wkhtmltopdf.NewPageReader(bytes.NewReader(htmlBuffer.Bytes()))
+	page.DisableSmartShrinking.Set(true)
+	page.EnableLocalFileAccess.Set(true)
+	pdfg.AddPage(page)
+
+	if err := pdfg.Create(); err != nil {
+		http.Error(w, "Erreur création PDF", http.StatusInternalServerError)
+		return
+	}
+
+	// Nom de fichier personnalisé
+	filename := fmt.Sprintf("devis_%s.pdf", data.Reference)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%s", filename))
+	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
+}
+
+// DownloadDevisPDF génère et télécharge un devis en PDF
+func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var devis models.Devis
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").First(&devis, id).Error; err != nil {
+		http.Error(w, "Devis introuvable", http.StatusNotFound)
+		return
+	}
+
+	// Réutiliser la même logique que GenerateDevisPDF
+	var lignes []LigneDevis
+	var sousTotalHT, totalTVA, totalTTC float64
+
+	for _, l := range devis.Lignes {
+		montantHT := float64(l.Quantite) * l.PrixUnitaire
+		montantTVA := montantHT * (l.TVA / 100)
+		montantTTC := montantHT + montantTVA
+
+		lignes = append(lignes, LigneDevis{
+			Designation:  l.Description,
+			Unite:        "U",
+			Quantite:     float64(l.Quantite),
+			PrixUnitaire: l.PrixUnitaire,
+			MontantHT:    montantHT,
+			TVA:          l.TVA,
+			MontantTTC:   montantTTC,
+		})
+
+		sousTotalHT += montantHT
+		totalTVA += montantTVA
+		totalTTC += montantTTC
+	}
+
+	dateEdition := devis.DateDevis.Format("02 janvier 2006")
+	dateExpiration := devis.DateExpiration.Format("02 janvier 2006")
+
+	objet := devis.Objet
+	if objet == "" {
+		objet = fmt.Sprintf("Devis pour %s", devis.Client.Nom)
+	}
+
+	// Informations de l'entreprise
+	company := config.GetCompanyInfo()
+	devisConfig := config.GetDevisConfig()
+
+	data := DevisPDFData{
+		Reference:       fmt.Sprintf("%s%04d", devisConfig.NumberingPrefix, devis.ID),
+		Ville:           devisConfig.DefaultCity,
+		DateEdition:     dateEdition,
+		DateExpiration:  dateExpiration,
+		ClientNom:       devis.Client.Nom,
+		ClientAdresse:   devis.Client.Adresse,
+		ClientEmail:     devis.Client.Email,
+		ClientTelephone: devis.Client.Telephone,
+		Conditions:      devis.Conditions,
+		Lignes:          lignes,
+		SousTotalHT:     sousTotalHT,
+		TotalTVA:        totalTVA,
+		TotalTTC:        totalTTC,
+		Objet:           objet,
+		Company:         company,
+	}
+
+	funcMap := template.FuncMap{
+		"add": func(a, b int) int { return a + b },
+		"formatPrice": func(price float64) string {
+			return fmt.Sprintf("%.2f €", price)
+		},
+		"formatPercent": func(percent float64) string {
+			return fmt.Sprintf("%.1f%%", percent)
+		},
+	}
+
+	tmpl, err := template.New("devis_improved.html").Funcs(funcMap).ParseFiles("templates/devis_improved.html")
+	if err != nil {
+		http.Error(w, "Erreur chargement template", http.StatusInternalServerError)
+		return
+	}
+
+	var htmlBuffer bytes.Buffer
+	if err := tmpl.Execute(&htmlBuffer, data); err != nil {
+		http.Error(w, "Erreur exécution template", http.StatusInternalServerError)
+		return
+	}
+
+	pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	if err != nil {
+		http.Error(w, "Erreur PDF", http.StatusInternalServerError)
+		return
+	}
+
+	pdfg.Dpi.Set(300)
+	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
+	pdfg.Grayscale.Set(false)
+	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
+
+	page := wkhtmltopdf.NewPageReader(bytes.NewReader(htmlBuffer.Bytes()))
+	page.DisableSmartShrinking.Set(true)
+	page.EnableLocalFileAccess.Set(true)
+	pdfg.AddPage(page)
+
+	if err := pdfg.Create(); err != nil {
+		http.Error(w, "Erreur création PDF", http.StatusInternalServerError)
+		return
+	}
+
+	filename := fmt.Sprintf("devis_%s.pdf", data.Reference)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
+}
+
+// GetDevis récupère un devis par ID
+func GetDevis(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var devis models.Devis
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").First(&devis, id).Error; err != nil {
+		http.Error(w, "Devis introuvable", http.StatusNotFound)
+		return
+	}
+
+	// Calculer les totaux
+	calculateTotals(&devis)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(devis)
+}
+
+// UpdateDevis met à jour un devis existant
+func UpdateDevis(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var devis models.Devis
+
+	if err := json.NewDecoder(r.Body).Decode(&devis); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Validation des données du devis
+	if err := validateDevisData(&devis); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := config.DB.Model(&devis).Where("id = ?", id).Updates(devis).Error; err != nil {
+		http.Error(w, "Erreur lors de la mise à jour du devis", http.StatusInternalServerError)
+		return
+	}
+
+	// Récupérer le devis mis à jour avec les relations
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").First(&devis, id).Error; err != nil {
+		http.Error(w, "Erreur lors de la récupération du devis", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculer les totaux
+	calculateTotals(&devis)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(devis)
+}
+
+// DeleteDevis supprime un devis
+func DeleteDevis(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	if err := config.DB.Delete(&models.Devis{}, id).Error; err != nil {
+		http.Error(w, "Erreur lors de la suppression du devis", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetDevisByEntreprise récupère tous les devis d'une entreprise
+func GetDevisByEntreprise(w http.ResponseWriter, r *http.Request) {
+	entrepriseID := chi.URLParam(r, "entrepriseId")
+
+	var devis []models.Devis
+	if err := config.DB.Where("entreprise_id = ?", entrepriseID).Preload("Lignes").Preload("Entreprise").Preload("Client").Find(&devis).Error; err != nil {
+		http.Error(w, "Erreur lors de la récupération des devis", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculer les totaux pour chaque devis
+	for i := range devis {
+		calculateTotals(&devis[i])
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(devis)
+}
+
+// GetDevisByClient récupère tous les devis d'un client
+func GetDevisByClient(w http.ResponseWriter, r *http.Request) {
+	clientID := chi.URLParam(r, "clientId")
+
+	var devis []models.Devis
+	if err := config.DB.Where("client_id = ?", clientID).Preload("Lignes").Preload("Entreprise").Preload("Client").Find(&devis).Error; err != nil {
+		http.Error(w, "Erreur lors de la récupération des devis", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculer les totaux pour chaque devis
+	for i := range devis {
+		calculateTotals(&devis[i])
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(devis)
+}
+
+// UpdateDevisStatut met à jour le statut d'un devis
+func UpdateDevisStatut(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var requestData struct {
+		Statut string `json:"statut"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Valider le statut
+	validStatuts := []string{"brouillon", "envoyé", "accepté", "refusé", "expiré"}
+	statutValide := false
+	for _, s := range validStatuts {
+		if s == requestData.Statut {
+			statutValide = true
+			break
+		}
+	}
+
+	if !statutValide {
+		http.Error(w, "Statut invalide", http.StatusBadRequest)
+		return
+	}
+
+	// Mettre à jour le statut
+	if err := config.DB.Model(&models.Devis{}).Where("id = ?", id).Update("statut", requestData.Statut).Error; err != nil {
+		http.Error(w, "Erreur lors de la mise à jour du statut", http.StatusInternalServerError)
+		return
+	}
+
+	// Récupérer le devis mis à jour
+	var devis models.Devis
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").First(&devis, id).Error; err != nil {
+		http.Error(w, "Erreur lors de la récupération du devis", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculer les totaux
+	calculateTotals(&devis)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(devis)
+}
+
+// calculateTotals calcule les totaux pour un devis
+func calculateTotals(devis *models.Devis) {
+	var sousTotalHT, totalTVA, totalTTC float64
+
+	for _, ligne := range devis.Lignes {
+		montantHT := float64(ligne.Quantite) * ligne.PrixUnitaire
+		montantTVA := montantHT * (ligne.TVA / 100)
+		montantTTC := montantHT + montantTVA
+
+		sousTotalHT += montantHT
+		totalTVA += montantTVA
+		totalTTC += montantTTC
+	}
+
+	devis.SousTotalHT = sousTotalHT
+	devis.TotalTVA = totalTVA
+	devis.TotalTTC = totalTTC
+}
+
+// validateDevisData valide les données d'un devis
+func validateDevisData(devis *models.Devis) error {
+	// Vérifier que l'entreprise existe
+	var entreprise models.Entreprise
+	if err := config.DB.First(&entreprise, devis.EntrepriseID).Error; err != nil {
+		return fmt.Errorf("entreprise introuvable")
+	}
+
+	// Vérifier que le client existe et appartient à l'entreprise
+	var client models.Client
+	if err := config.DB.First(&client, devis.ClientID).Error; err != nil {
+		return fmt.Errorf("client introuvable")
+	}
+
+	if client.EntrepriseID != devis.EntrepriseID {
+		return fmt.Errorf("le client n'appartient pas à cette entreprise")
+	}
+
+	return nil
 }

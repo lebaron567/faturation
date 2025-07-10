@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devis {{.Reference}}</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #000;
+            margin: 20px;
+            background: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .company-info {
+            text-align: left;
+        }
+
+        .company-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            font-size: 11px;
+            color: #333;
+        }
+
+        .document-info {
+            text-align: right;
+        }
+
+        .document-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        .document-ref {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        /* Client Section */
+        .client-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 40px;
+        }
+
+        .client-info,
+        .devis-info {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        .client-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Object Section */
+        .object-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #000;
+        }
+
+        .object-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Table */
+        .devis-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            border: 1px solid #000;
+        }
+
+        .devis-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+            border: 1px solid #000;
+        }
+
+        .devis-table td {
+            padding: 8px;
+            border: 1px solid #000;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .devis-table td:nth-child(2) {
+            text-align: left;
+            max-width: 250px;
+        }
+
+        .prix-column {
+            text-align: right !important;
+            font-weight: bold;
+        }
+
+        /* Totals */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 300px;
+            border-collapse: collapse;
+            border: 1px solid #000;
+        }
+
+        .totals-table td {
+            padding: 8px 12px;
+            border: 1px solid #000;
+        }
+
+        .totals-table .label {
+            font-weight: bold;
+            text-align: left;
+            background: #f5f5f5;
+        }
+
+        .totals-table .value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .totals-table .total-row {
+            background: #e0e0e0;
+            font-weight: bold;
+        }
+
+        /* Conditions */
+        .conditions-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #000;
+        }
+
+        .conditions-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid #000;
+            padding-top: 15px;
+            text-align: center;
+            font-size: 10px;
+            margin-top: 40px;
+        }
+
+        .footer-company {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                margin: 15px;
+            }
+
+            .container {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                    alt="Logo" class="logo">
+                <div class="company-info">
+                    <div class="company-name">{{.Company.Name}}</div>
+                    <div class="company-details">
+                        {{.Company.Address}}<br>
+                        {{.Company.PostalCode}} {{.Company.City}}<br>
+                        {{if .Company.Phone}}Tél: {{.Company.Phone}}<br>{{end}}
+                        {{if .Company.Email}}Email: {{.Company.Email}}{{end}}
+                    </div>
+                </div>
+            </div>
+            <div class="document-info">
+                <div class="document-title">DEVIS</div>
+                <div class="document-ref">Référence: {{.Reference}}</div>
+                <div class="document-ref">{{.Ville}}, le {{.DateEdition}}</div>
+                {{if .DateExpiration}}
+                <div class="document-ref">Valide jusqu'au {{.DateExpiration}}</div>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Client Section -->
+        <div class="client-section">
+            <div class="client-info">
+                <div class="section-title">CLIENT</div>
+                <div class="client-name">{{.ClientNom}}</div>
+                {{if .ClientAdresse}}
+                <div>{{.ClientAdresse}}</div>
+                {{end}}
+                {{if .ClientEmail}}
+                <div>Email: {{.ClientEmail}}</div>
+                {{end}}
+                {{if .ClientTelephone}}
+                <div>Tél: {{.ClientTelephone}}</div>
+                {{end}}
+            </div>
+            <div class="devis-info">
+                <div class="section-title">INFORMATIONS DEVIS</div>
+                <div><strong>Date d'édition:</strong> {{.DateEdition}}</div>
+                {{if .DateExpiration}}
+                <div><strong>Date d'expiration:</strong> {{.DateExpiration}}</div>
+                {{end}}
+                <div><strong>Référence:</strong> {{.Reference}}</div>
+            </div>
+        </div>
+
+        <!-- Object Section -->
+        {{if .Objet}}
+        <div class="object-section">
+            <div class="object-title">OBJET DU DEVIS</div>
+            <div>{{.Objet}}</div>
+        </div>
+        {{end}}
+
+        <!-- Table des lignes -->
+        <table class="devis-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">N°</th>
+                    <th style="width: 250px;">DÉSIGNATION</th>
+                    <th style="width: 50px;">UN</th>
+                    <th style="width: 70px;">QTÉ</th>
+                    <th style="width: 80px;">PRIX UNIT. HT</th>
+                    <th style="width: 60px;">TVA</th>
+                    <th style="width: 90px;">MONTANT HT</th>
+                    <th style="width: 90px;">MONTANT TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $index, $ligne := .Lignes}}
+                <tr>
+                    <td>{{add $index 1}}</td>
+                    <td>{{$ligne.Designation}}</td>
+                    <td>{{$ligne.Unite}}</td>
+                    <td>{{printf "%.0f" $ligne.Quantite}}</td>
+                    <td class="prix-column">{{formatPrice $ligne.PrixUnitaire}}</td>
+                    <td>{{formatPercent $ligne.TVA}}</td>
+                    <td class="prix-column">{{formatPrice $ligne.MontantHT}}</td>
+                    <td class="prix-column">{{formatPrice $ligne.MontantTTC}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td class="label">SOUS-TOTAL HT</td>
+                    <td class="value">{{formatPrice .SousTotalHT}}</td>
+                </tr>
+                <tr>
+                    <td class="label">TOTAL TVA</td>
+                    <td class="value">{{formatPrice .TotalTVA}}</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="label">TOTAL TTC</td>
+                    <td class="value">{{formatPrice .TotalTTC}}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Conditions -->
+        {{if .Conditions}}
+        <div class="conditions-section">
+            <div class="conditions-title">CONDITIONS PARTICULIÈRES</div>
+            <div>{{.Conditions}}</div>
+        </div>
+        {{end}}
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-company">{{.Company.Name}}</div>
+            <div>
+                {{.Company.Address}} – {{.Company.PostalCode}} {{.Company.City}} – Tél: {{.Company.Phone}} – Email:
+                {{.Company.Email}}<br>
+                SAS au capital de {{.Company.Capital}} – SIRET: {{.Company.SIRET}} – APE: {{.Company.APE}} – TVA:
+                {{.Company.TVA}} – RCS: {{.Company.RCS}}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

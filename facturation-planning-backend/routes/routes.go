@@ -37,7 +37,19 @@ func SetupRoutes() *chi.Mux {
 		r.Post("/", controllers.CreateClient)
 	})
 
+	r.Get("/devis", controllers.GetAllDevis)
 	r.Post("/devis", controllers.CreateDevis)
+	r.Get("/devis/{id}", controllers.GetDevis)
+	r.Put("/devis/{id}", controllers.UpdateDevis)
+	r.Delete("/devis/{id}", controllers.DeleteDevis)
+	r.Get("/devis/{id}/pdf", controllers.GenerateDevisPDF)
+	r.Get("/devis/{id}/download", controllers.DownloadDevisPDF)
+	r.Patch("/devis/{id}/statut", controllers.UpdateDevisStatut)
+	
+	// Devis par entreprise et client
+	r.Get("/entreprises/{entrepriseId}/devis", controllers.GetDevisByEntreprise)
+	r.Get("/clients/{clientId}/devis", controllers.GetDevisByClient)
+
 
 
 	// Plannings

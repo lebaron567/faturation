@@ -7,13 +7,14 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Header from "./components/Header";
 import AddSalarie from "./components/AddSalarie";
-import Sidebar from "./components/Sidebar"; import AjouterClient from "./components/AjouterClient";
+import Sidebar from "./components/Sidebar";
+import AjouterClient from "./components/AjouterClient";
 import GestionDocuments from "./components/GestionDocuments";
 import DevisFormComplet from "./components/DevisFormComplet";
+import ListeDevis from "./components/ListeDevis";
+import DevisDetails from "./components/DevisDetails";
 
-// ...
-
-import "./App.css"; // Assure-toi d'importer les styles
+import "./App.css";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
@@ -45,6 +46,8 @@ function App() {
               path="/devis"
               element={isAuthenticated ? <DevisFormComplet /> : <Navigate to="/login" />}
             />
+            <Route path="/devis/liste" element={isAuthenticated ? <ListeDevis /> : <Navigate to="/login" />} />
+            <Route path="/devis/:id" element={isAuthenticated ? <DevisDetails /> : <Navigate to="/login" />} />
 
             <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/login" />} />
             <Route path="/factures" element={isAuthenticated ? <FactureForm /> : <Navigate to="/login" />} />
