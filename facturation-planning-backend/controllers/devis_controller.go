@@ -24,7 +24,7 @@ import (
 // @Success 201 {object} models.Devis "Devis créé avec succès"
 // @Failure 400 {string} string "Erreur de validation des données"
 // @Failure 500 {string} string "Erreur interne du serveur"
-// @Router /api/devis [post]
+// @Router devis [post]
 func CreateDevis(w http.ResponseWriter, r *http.Request) {
 	var devis models.Devis
 
@@ -70,7 +70,7 @@ func CreateDevis(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {array} models.Devis "Liste de tous les devis avec totaux calculés"
 // @Failure 500 {string} string "Erreur lors de la récupération des devis"
-// @Router /api/devis [get]
+// @Router devis [get]
 func GetAllDevis(w http.ResponseWriter, r *http.Request) {
 	var devis []models.Devis
 
@@ -125,7 +125,7 @@ type DevisPDFData struct {
 // @Success 200 {file} file "Fichier PDF généré pour affichage"
 // @Failure 404 {string} string "Devis introuvable"
 // @Failure 500 {string} string "Erreur lors de la génération du PDF"
-// @Router /api/devis/{id}/pdf [get]
+// @Router devis/{id}/pdf [get]
 func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -252,7 +252,7 @@ func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {file} file "Fichier PDF à télécharger"
 // @Failure 404 {string} string "Devis introuvable"
 // @Failure 500 {string} string "Erreur lors de la génération du PDF"
-// @Router /api/devis/{id}/download [get]
+// @Router devis/{id}/download [get]
 func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -373,7 +373,7 @@ func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "ID du devis à récupérer"
 // @Success 200 {object} models.Devis "Devis trouvé avec totaux calculés"
 // @Failure 404 {string} string "Devis introuvable"
-// @Router /api/devis/{id} [get]
+// @Router devis/{id} [get]
 func GetDevis(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -401,7 +401,7 @@ func GetDevis(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} models.Devis "Devis mis à jour avec succès"
 // @Failure 400 {string} string "Erreur de validation des données"
 // @Failure 500 {string} string "Erreur lors de la mise à jour"
-// @Router /api/devis/{id} [put]
+// @Router devis/{id} [put]
 func UpdateDevis(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var devis models.Devis
@@ -442,7 +442,7 @@ func UpdateDevis(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "ID du devis à supprimer"
 // @Success 204 "Devis supprimé avec succès"
 // @Failure 500 {string} string "Erreur lors de la suppression"
-// @Router /api/devis/{id} [delete]
+// @Router devis/{id} [delete]
 func DeleteDevis(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -463,7 +463,7 @@ func DeleteDevis(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} models.Devis "Liste des devis de l'entreprise"
 // @Failure 400 {string} string "ID entreprise manquant"
 // @Failure 500 {string} string "Erreur lors de la récupération"
-// @Router /api/entreprises/{id}/devis [get]
+// @Router entreprises/{id}/devis [get]
 func GetDevisByEntreprise(w http.ResponseWriter, r *http.Request) {
 	entrepriseID := chi.URLParam(r, "id")
 
@@ -500,7 +500,7 @@ func GetDevisByEntreprise(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} models.Devis "Liste des devis du client"
 // @Failure 400 {string} string "ID client manquant"
 // @Failure 500 {string} string "Erreur lors de la récupération"
-// @Router /api/clients/{id}/devis [get]
+// @Router clients/{id}/devis [get]
 func GetDevisByClient(w http.ResponseWriter, r *http.Request) {
 	clientID := chi.URLParam(r, "id")
 
@@ -537,7 +537,7 @@ func GetDevisByClient(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} models.Devis "Devis avec statut mis à jour"
 // @Failure 400 {string} string "Statut invalide"
 // @Failure 500 {string} string "Erreur lors de la mise à jour du statut"
-// @Router /api/devis/{id}/statut [patch]
+// @Router devis/{id}/statut [patch]
 func UpdateDevisStatut(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

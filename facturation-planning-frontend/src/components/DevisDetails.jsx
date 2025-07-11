@@ -10,14 +10,24 @@ const DevisDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const statusOptions = [
+    { value: "brouillon", label: "Brouillon", color: "#6c757d" },
+    { value: "envoyé", label: "Envoyé", color: "#007bff" },
+    { value: "accepté", label: "Accepté", color: "#28a745" },
+    { value: "refusé", label: "Refusé", color: "#dc3545" },
+    { value: "expiré", label: "Expiré", color: "#fd7e14" }
+  ];
+
   useEffect(() => {
     const fetchDevis = async () => {
       try {
+        console.log(`📝 Récupération du devis ${id}`);
         const response = await axios.get(`/devis/${id}`);
+        console.log("📝 Devis récupéré:", response.data);
         setDevis(response.data);
       } catch (err) {
+        console.error("❌ Erreur récupération devis:", err);
         setError("Impossible de charger le devis");
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -28,166 +38,304 @@ const DevisDetails = () => {
 
   const handleStatusChange = async (newStatus) => {
     try {
+      console.log(`🔄 Changement de statut: ${devis.statut} → ${newStatus}`);
       await axios.patch(`/devis/${id}/statut`, { statut: newStatus });
       setDevis(prev => ({ ...prev, statut: newStatus }));
+      alert(`✅ Statut mis à jour vers "${newStatus}"`);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Erreur changement statut:", err);
       alert("❌ Erreur lors du changement de statut");
     }
   };
 
-  const downloadPDF = async () => {
+  const generatePDF = async (download = false) => {
     try {
-      const response = await axios.get(`/devis/${id}/download`, {
+      const endpoint = download ? 'download' : 'pdf';
+      console.log(`📄 Génération PDF (${endpoint}) pour devis ${id}`);
+
+      const response = await axios.get(`/devis/${id}/${endpoint}`, {
         responseType: 'blob',
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `devis_${id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      if (download) {
+        // Téléchargement
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `devis_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Affichage dans un nouvel onglet
+        window.open(url, '_blank');
+      }
+
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
-      alert("❌ Erreur lors du téléchargement du PDF");
+      console.error("❌ Erreur génération PDF:", err);
+      alert("❌ Erreur lors de la génération du PDF");
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'brouillon': return '#6c757d';
-      case 'envoyé': return '#007bff';
-      case 'accepté': return '#28a745';
-      case 'refusé': return '#dc3545';
-      case 'expiré': return '#fd7e14';
-      default: return '#6c757d';
+  const deleteDevis = async () => {
+    if (!window.confirm("❌ Êtes-vous sûr de vouloir supprimer ce devis ? Cette action est irréversible.")) {
+      return;
+    }
+
+    try {
+      console.log(`🗑️ Suppression du devis ${id}`);
+      await axios.delete(`/devis/${id}`);
+      alert("🗑️ Devis supprimé avec succès");
+      navigate("/gestion-documents");
+    } catch (err) {
+      console.error("❌ Erreur suppression:", err);
+      alert("❌ Erreur lors de la suppression du devis");
     }
   };
 
-  if (loading) return <div className="loading">Chargement du devis...</div>;
-  if (error) return <div className="error">{error}</div>;
-  if (!devis) return <div className="error">Devis non trouvé</div>;
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('fr-FR');
+  };
+
+  const formatPrice = (price) => {
+    return price ? price.toFixed(2) + ' €' : '0.00 €';
+  };
+
+  const getStatusInfo = (status) => {
+    return statusOptions.find(opt => opt.value === status) || statusOptions[0];
+  };
+
+  if (loading) {
+    return (
+      <div className="devis-details-container">
+        <p>Chargement du devis...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="devis-details-container">
+        <div className="error-message">
+          <h3>❌ Erreur</h3>
+          <p>{error}</p>
+          <button onClick={() => navigate("/gestion-documents")}>
+            ← Retour aux documents
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!devis) {
+    return (
+      <div className="devis-details-container">
+        <p>Devis introuvable</p>
+      </div>
+    );
+  }
+
+  const statusInfo = getStatusInfo(devis.statut || 'brouillon');
 
   return (
-    <div className="devis-details">
+    <div className="devis-details-container">
+      {/* En-tête avec actions */}
       <div className="devis-header">
-        <button onClick={() => navigate(-1)} className="back-btn">
-          ← Retour
-        </button>
-        <h1>Devis #{devis.ID}</h1>
-        <div className="status-section">
-          <span
-            className="status-badge"
-            style={{ backgroundColor: getStatusColor(devis.statut) }}
-          >
-            {devis.statut || 'brouillon'}
-          </span>
+        <div className="header-left">
+          <button onClick={() => navigate("/gestion-documents")} className="back-button">
+            ← Retour
+          </button>
+          <div>
+            <h2>📝 Devis #{devis.ID}</h2>
+            <p className="devis-subtitle">{devis.objet || "Sans objet"}</p>
+          </div>
+        </div>
+
+        <div className="header-actions">
           <select
             value={devis.statut || 'brouillon'}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="status-select"
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: statusInfo.color,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              marginRight: '1rem'
+            }}
           >
-            <option value="brouillon">Brouillon</option>
-            <option value="envoyé">Envoyé</option>
-            <option value="accepté">Accepté</option>
-            <option value="refusé">Refusé</option>
-            <option value="expiré">Expiré</option>
+            {statusOptions.map(option => (
+              <option key={option.value} value={option.value} style={{ backgroundColor: 'white', color: 'black' }}>
+                {option.label}
+              </option>
+            ))}
           </select>
+
+          <button onClick={() => generatePDF(false)} className="action-button primary">
+            👁️ Voir PDF
+          </button>
+          <button onClick={() => generatePDF(true)} className="action-button success">
+            ⬇️ Télécharger PDF
+          </button>
+          <button onClick={deleteDevis} className="action-button danger">
+            🗑️ Supprimer
+          </button>
         </div>
       </div>
 
+      {/* Informations principales */}
       <div className="devis-content">
-        <div className="devis-info-section">
-          <h2>Informations générales</h2>
-          <div className="info-grid">
-            <div className="info-item">
-              <strong>Objet:</strong>
-              <span>{devis.objet}</span>
+        <div className="info-grid">
+          {/* Informations du devis */}
+          <div className="info-section">
+            <h3>📄 Informations du devis</h3>
+            <div className="info-row">
+              <span className="label">Référence:</span>
+              <span className="value">DEVIS-{String(devis.ID).padStart(4, '0')}</span>
             </div>
-            <div className="info-item">
-              <strong>Client:</strong>
-              <span>{devis.Client?.nom || 'Client non trouvé'}</span>
+            <div className="info-row">
+              <span className="label">Date de création:</span>
+              <span className="value">{formatDate(devis.date_devis)}</span>
             </div>
-            <div className="info-item">
-              <strong>Email client:</strong>
-              <span>{devis.Client?.email || 'N/A'}</span>
+            <div className="info-row">
+              <span className="label">Date d'expiration:</span>
+              <span className="value">{formatDate(devis.date_expiration)}</span>
             </div>
-            <div className="info-item">
-              <strong>Date de création:</strong>
-              <span>{new Date(devis.date_devis).toLocaleDateString()}</span>
+            <div className="info-row">
+              <span className="label">Statut:</span>
+              <span
+                className="value status-badge"
+                style={{
+                  backgroundColor: statusInfo.color,
+                  color: 'white',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '12px',
+                  fontSize: '0.8rem'
+                }}
+              >
+                {statusInfo.label}
+              </span>
             </div>
-            <div className="info-item">
-              <strong>Date d'expiration:</strong>
-              <span>{new Date(devis.date_expiration).toLocaleDateString()}</span>
+          </div>
+
+          {/* Informations client */}
+          <div className="info-section">
+            <h3>👤 Client</h3>
+            {devis.Client ? (
+              <>
+                <div className="info-row">
+                  <span className="label">Nom:</span>
+                  <span className="value">{devis.Client.nom}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Email:</span>
+                  <span className="value">{devis.Client.email}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Téléphone:</span>
+                  <span className="value">{devis.Client.telephone || "Non renseigné"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Adresse:</span>
+                  <span className="value">{devis.Client.adresse || "Non renseignée"}</span>
+                </div>
+              </>
+            ) : (
+              <p>Informations client non disponibles</p>
+            )}
+          </div>
+
+          {/* Informations entreprise */}
+          <div className="info-section">
+            <h3>🏢 Entreprise</h3>
+            {devis.Entreprise ? (
+              <>
+                <div className="info-row">
+                  <span className="label">Nom:</span>
+                  <span className="value">{devis.Entreprise.nom}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Email:</span>
+                  <span className="value">{devis.Entreprise.email}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Téléphone:</span>
+                  <span className="value">{devis.Entreprise.telephone || "Non renseigné"}</span>
+                </div>
+              </>
+            ) : (
+              <p>Informations entreprise non disponibles</p>
+            )}
+          </div>
+
+          {/* Totaux */}
+          <div className="info-section">
+            <h3>💰 Totaux</h3>
+            <div className="info-row">
+              <span className="label">Sous-total HT:</span>
+              <span className="value">{formatPrice(devis.sous_total_ht || devis.SousTotalHT)}</span>
             </div>
-            <div className="info-item">
-              <strong>Entreprise:</strong>
-              <span>{devis.Entreprise?.nom || 'N/A'}</span>
+            <div className="info-row">
+              <span className="label">Total TVA:</span>
+              <span className="value">{formatPrice(devis.total_tva || devis.TotalTVA)}</span>
+            </div>
+            <div className="info-row total-row">
+              <span className="label">Total TTC:</span>
+              <span className="value total-value">{formatPrice(devis.total_ttc || devis.TotalTTC)}</span>
             </div>
           </div>
         </div>
 
-        {devis.conditions && (
-          <div className="conditions-section">
-            <h2>Conditions</h2>
-            <p>{devis.conditions}</p>
+        {/* Lignes du devis */}
+        {devis.Lignes && devis.Lignes.length > 0 && (
+          <div className="lignes-section">
+            <h3>📋 Lignes du devis</h3>
+            <div className="table-container">
+              <table className="lignes-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Quantité</th>
+                    <th>Prix unitaire</th>
+                    <th>TVA</th>
+                    <th>Total HT</th>
+                    <th>Total TTC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {devis.Lignes.map((ligne, index) => {
+                    const totalHT = ligne.quantite * ligne.prix_unitaire;
+                    const totalTTC = totalHT * (1 + ligne.tva / 100);
+                    return (
+                      <tr key={index}>
+                        <td>{ligne.description}</td>
+                        <td>{ligne.quantite}</td>
+                        <td>{formatPrice(ligne.prix_unitaire)}</td>
+                        <td>{ligne.tva}%</td>
+                        <td>{formatPrice(totalHT)}</td>
+                        <td>{formatPrice(totalTTC)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
-        <div className="lignes-section">
-          <h2>Détail des prestations</h2>
-          <div className="lignes-table">
-            <div className="table-header">
-              <span>Description</span>
-              <span>Quantité</span>
-              <span>Prix unitaire HT</span>
-              <span>TVA</span>
-              <span>Total HT</span>
-              <span>Total TTC</span>
-            </div>
-            {devis.lignes?.map((ligne, index) => (
-              <div key={index} className="table-row">
-                <span>{ligne.description}</span>
-                <span>{ligne.quantite}</span>
-                <span>{ligne.prix_unitaire.toFixed(2)} €</span>
-                <span>{ligne.tva}%</span>
-                <span>{(ligne.prix_unitaire * ligne.quantite).toFixed(2)} €</span>
-                <span>{(ligne.prix_unitaire * ligne.quantite * (1 + ligne.tva / 100)).toFixed(2)} €</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="totals-section">
-          <h2>Récapitulatif</h2>
-          <div className="totals-grid">
-            <div className="total-row">
-              <span>Total HT:</span>
-              <span>{devis.total_ht?.toFixed(2) || "0.00"} €</span>
-            </div>
-            <div className="total-row">
-              <span>Total TVA:</span>
-              <span>{devis.total_tva?.toFixed(2) || "0.00"} €</span>
-            </div>
-            <div className="total-row total-ttc">
-              <span>Total TTC:</span>
-              <span>{devis.total_ttc?.toFixed(2) || "0.00"} €</span>
+        {/* Conditions */}
+        {devis.conditions && (
+          <div className="conditions-section">
+            <h3>📜 Conditions</h3>
+            <div className="conditions-content">
+              {devis.conditions}
             </div>
           </div>
-        </div>
-
-        <div className="actions-section">
-          <button onClick={downloadPDF} className="primary-btn">
-            📥 Télécharger PDF
-          </button>
-          <button
-            onClick={() => window.open(`/devis/${id}/pdf`, '_blank')}
-            className="secondary-btn"
-          >
-            👁️ Visualiser PDF
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

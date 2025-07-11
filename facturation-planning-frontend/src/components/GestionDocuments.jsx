@@ -109,15 +109,27 @@ const GestionDocuments = () => {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <h3>Devis récents</h3>
-                <Link
-                  to="/devis/liste"
-                  style={{
-                    color: "#007bff",
-                    textDecoration: "none"
-                  }}
-                >
-                  Voir tous les devis →
-                </Link>
+                <div>
+                  <Link
+                    to="/devis/manager"
+                    style={{
+                      color: "#007bff",
+                      textDecoration: "none",
+                      marginRight: "1rem"
+                    }}
+                  >
+                    🔧 Gestionnaire complet →
+                  </Link>
+                  <Link
+                    to="/devis/liste"
+                    style={{
+                      color: "#007bff",
+                      textDecoration: "none"
+                    }}
+                  >
+                    Voir tous les devis →
+                  </Link>
+                </div>
               </div>
 
               {devisList.length === 0 ? (

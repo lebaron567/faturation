@@ -1,24 +1,32 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Header.css"; // Assurez-vous d'importer le fichier CSS pour le style
+import "../styles/Header.css";
 
 const Header = ({ isAuthenticated, setIsAuthenticated, toggleSidebar }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // ❌ Supprime le token
-    setIsAuthenticated(false); // 🔄 Met à jour l'état
-    navigate("/login"); // 🔄 Redirige vers la page de connexion
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    navigate("/login");
   };
-
 
   return (
     <header>
-      <button onClick={toggleSidebar} style={{ marginRight: "20px" }}>
-        📂
-      </button>
+      <div className="header-left">
+        <button onClick={toggleSidebar} title="Toggle Sidebar">
+          📂
+        </button>
+        <h1 className="header-title">Facturation & Planning</h1>
+      </div>
 
-      {isAuthenticated && <button onClick={handleLogout}>🚪 Se déconnecter</button>}
+      <div className="header-right">
+        {isAuthenticated && (
+          <button onClick={handleLogout} title="Se déconnecter">
+            🚪 Se déconnecter
+          </button>
+        )}
+      </div>
     </header>
   );
 };

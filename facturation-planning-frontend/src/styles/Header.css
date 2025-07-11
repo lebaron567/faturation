@@ -4,24 +4,116 @@ header {
     align-items: center;
     justify-content: space-between;
     background-color: #1e2a38;
-    padding: 10px 20px;
     color: white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 60px; /* Hauteur fixe pour le header */
+    min-height: 60px; /* Hauteur minimum */
+    max-height: 60px; /* Hauteur maximum pour empêcher l'expansion */
+    flex-shrink: 0; /* Empêche la compression du header */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 0 20px; /* Padding horizontal seulement */
+    box-sizing: border-box; /* Important pour que le padding soit inclus dans la hauteur */
+    line-height: 60px; /* Force la ligne de base */
   }
   
   header button {
     background-color: #2e3d52;
     color: white;
     border: none;
-    padding: 8px 14px;
+    padding: 0 14px; /* Padding horizontal seulement */
     margin-left: 10px;
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    height: 36px; /* Hauteur fixe pour les boutons */
+    min-height: 36px;
+    max-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    white-space: nowrap; /* Empêche le retour à la ligne */
   }
   
   header button:hover {
     background-color: #3d516c;
   }
-  
+
+  /* S'assurer que le bouton toggle sidebar a la même taille */
+  header button:first-child {
+    margin-left: 0;
+    margin-right: 20px;
+  }
+
+  /* Styles pour la structure du header */
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    height: 60px; /* Force la hauteur du conteneur */
+    line-height: 1; /* Réinitialise la hauteur de ligne */
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    height: 60px; /* Force la hauteur du conteneur */
+    line-height: 1; /* Réinitialise la hauteur de ligne */
+  }
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+    line-height: 1.2; /* Hauteur de ligne contrôlée */
+    white-space: nowrap; /* Empêche le retour à la ligne */
+  }
+
+  /* Responsive pour mobile */
+  @media (max-width: 768px) {
+    .header-title {
+      display: none;
+    }
+    
+    header {
+      padding: 0 15px; /* Padding horizontal seulement */
+      height: 60px; /* Maintenir la hauteur même sur mobile */
+      min-height: 60px;
+      max-height: 60px;
+    }
+
+    .header-left, .header-right {
+      height: 60px; /* Maintenir la hauteur sur mobile */
+    }
+  }
+
+  /* CSS de reset pour éviter les conflits */
+  header * {
+    box-sizing: border-box;
+  }
+
+  /* Force la hauteur pour tous les éléments enfants du header */
+  header > * {
+    height: 60px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Règle très spécifique pour forcer la hauteur du header */
+  header[class*=""], header {
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    line-height: 1 !important;
+  }
+
+  /* Empêche tout élément dans le header de dépasser */
+  header, header * {
+    overflow: visible;
+    vertical-align: middle;
+  }

@@ -13,6 +13,7 @@ import GestionDocuments from "./components/GestionDocuments";
 import DevisFormComplet from "./components/DevisFormComplet";
 import ListeDevis from "./components/ListeDevis";
 import DevisDetails from "./components/DevisDetails";
+import DevisManager from "./components/DevisManager";
 
 import "./App.css";
 
@@ -47,6 +48,7 @@ function App() {
               element={isAuthenticated ? <DevisFormComplet /> : <Navigate to="/login" />}
             />
             <Route path="/devis/liste" element={isAuthenticated ? <ListeDevis /> : <Navigate to="/login" />} />
+            <Route path="/devis/manager" element={isAuthenticated ? <DevisManager /> : <Navigate to="/login" />} />
             <Route path="/devis/:id" element={isAuthenticated ? <DevisDetails /> : <Navigate to="/login" />} />
 
             <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/login" />} />

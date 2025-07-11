@@ -65,28 +65,65 @@ const Planning = () => {
 
   // 🆕 Pour gérer le clic sur un événement
   useEffect(() => {
+    console.log("🔄 Chargement des données Planning...");
+
     fetchSalaries().then((res) => {
+      console.log("👥 Salariés récupérés:", res.data);
       setSalaries(res.data);
+    }).catch((err) => {
+      console.error("❌ Erreur salariés:", err);
     });
+
     fetchPlannings().then((res) => {
-      setEvents(formatEventsFromApi(res.data));
+      console.log("📅 Plannings bruts récupérés:", res.data);
+      const formattedEvents = formatEventsFromApi(res.data);
+      console.log("📅 Événements formatés:", formattedEvents);
+
+      // 🔍 Log détaillé du premier événement
+      if (formattedEvents.length > 0) {
+        console.log("🔍 Premier événement détaillé:", {
+          title: formattedEvents[0].title,
+          start: formattedEvents[0].start,
+          end: formattedEvents[0].end,
+          startIsValid: !isNaN(formattedEvents[0].start?.getTime()),
+          endIsValid: !isNaN(formattedEvents[0].end?.getTime()),
+          allProperties: formattedEvents[0]
+        });
+      }
+
+      setEvents(formattedEvents);
+    }).catch((err) => {
+      console.error("❌ Erreur plannings:", err);
     });
+
     fetchClients().then((res) => {
+      console.log("🏢 Clients récupérés:", res.data);
       setClients(res.data);
+    }).catch((err) => {
+      console.error("❌ Erreur clients:", err);
     });
   }, []);
 
   let filteredEvents = events;
+  console.log("🔍 Événements avant filtrage:", events.length);
+  console.log("🔍 Filtres actifs:", { selectedSalarieId, selectedClientId });
+
   if (selectedSalarieId && selectedSalarieId !== "") {
+    console.log("🔍 Filtrage par salarié:", selectedSalarieId);
     filteredEvents = filteredEvents.filter(
       (e) => String(e.salarie_id) === String(selectedSalarieId)
     );
+    console.log("🔍 Événements après filtre salarié:", filteredEvents.length);
   }
   if (selectedClientId && selectedClientId !== "") {
+    console.log("🔍 Filtrage par client:", selectedClientId);
     filteredEvents = filteredEvents.filter(
       (e) => String(e.client_id) === String(selectedClientId)
     );
+    console.log("🔍 Événements après filtre client:", filteredEvents.length);
   }
+
+  console.log("🔍 Événements finaux envoyés au calendrier:", filteredEvents.length, filteredEvents);
 
   // 🆕 Gestion du clic droit pour le menu contextuel
   useEffect(() => {
@@ -200,7 +237,10 @@ const Planning = () => {
             <button onClick={() => copyEventToClipboardAndForm(selectedEvent, setForm, setShowForm)}>
               📋 Copier
             </button>
-            <button onClick={() => handleDelete(selectedEvent, setEvents)}>🗑️ Supprimer</button>
+            <button onClick={() => {
+              handleDelete(selectedEvent, setEvents);
+              setSelectedEvent(null); // Ferme le menu après suppression
+            }}>🗑️ Supprimer</button>
             <button onClick={() => setSelectedEvent(null)}>❌ Fermer</button>
           </div>
         )}
