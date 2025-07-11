@@ -1,6 +1,7 @@
 .devis-form {
   width: 100%;
-  min-height: calc(100vh - 60px); /* Prendre toute la hauteur disponible */
+  min-height: calc(100vh - 60px);
+  /* Prendre toute la hauteur disponible */
   margin: 0;
   padding: 2rem 3rem;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -14,7 +15,7 @@
   color: #2c3e50;
   font-size: 2.2rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-section {

@@ -49,12 +49,14 @@ label {
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 9999; /* 💥 Priorité maximale pour passer au-dessus */
-}  
+  z-index: 9999;
+  /* 💥 Priorité maximale pour passer au-dessus */
+}
 
 .planning-page-wrapper {
   display: flex;
-  height: calc(100vh - 60px); /* Soustraire la hauteur du header */
+  height: calc(100vh - 60px);
+  /* Soustraire la hauteur du header */
   overflow: hidden;
 }
 
@@ -67,7 +69,8 @@ label {
 
 /* Suppression des styles globaux qui entrent en conflit */
 .planning-wrapper {
-  height: calc(100vh - 60px); /* Ajuster pour le header */
+  height: calc(100vh - 60px);
+  /* Ajuster pour le header */
   padding: 20px;
   box-sizing: border-box;
   background-color: #f5f5f5;
@@ -84,6 +87,7 @@ label {
   transition: top 0.15s ease, left 0.15s ease;
 
 }
+
 .context-menu button {
   margin-top: 8px;
   display: block;
@@ -94,6 +98,7 @@ label {
   border-radius: 4px;
   cursor: pointer;
 }
+
 .context-menu button:hover {
   background-color: #0056b3;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
