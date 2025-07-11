@@ -13,14 +13,24 @@ body,
   overflow: hidden;
 }
 
+.app-layout:not(.collapsed) .main-content {
+  margin-left: 280px;
+  /* Largeur de la nouvelle sidebar */
+  transition: margin-left 0.3s ease;
+}
+
+.app-layout.collapsed .main-content {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
 .main-content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* Important pour permettre le scroll dans les enfants */
   overflow: hidden;
-  /* Empêche le débordement */
+  width: 100%;
 }
 
 /* Container pour le contenu des pages */

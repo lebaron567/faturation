@@ -90,25 +90,156 @@ header button:first-child {
   /* Empêche le retour à la ligne */
 }
 
+/* Styles pour les breadcrumbs et la navigation */
+.breadcrumb-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.current-page-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.breadcrumb-separator {
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.breadcrumb-text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Actions rapides */
+.quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+  padding-right: 1rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quick-action-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 0 12px;
+  margin: 0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.quick-action-btn:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  padding: 0 14px;
+  margin: 0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.toggle-sidebar-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 0 10px;
+  margin: 0;
+  margin-right: 15px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.toggle-sidebar-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
 /* Responsive pour mobile */
 @media (max-width: 768px) {
-  .header-title {
+  .breadcrumb-trail {
     display: none;
   }
 
-  header {
-    padding: 0 15px;
-    /* Padding horizontal seulement */
-    height: 60px;
-    /* Maintenir la hauteur même sur mobile */
-    min-height: 60px;
-    max-height: 60px;
+  .quick-actions {
+    display: none;
   }
 
-  .header-left,
-  .header-right {
-    height: 60px;
-    /* Maintenir la hauteur sur mobile */
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .current-page-icon {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title {
+    display: none;
   }
 }
 
