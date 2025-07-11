@@ -11,9 +11,11 @@ import (
 
 // @Summary Récupérer tous les salariés
 // @Description Retourne la liste des salariés enregistrés
+// @Tags Salariés
 // @Produce  json
 // @Success 200 {array} models.Salarie
-// @Router /salaries [get]
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /api/salaries [get]
 func GetSalaries(w http.ResponseWriter, r *http.Request) {
 	var salaries []models.Salarie
 	config.DB.Find(&salaries)
@@ -22,13 +24,14 @@ func GetSalaries(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Créer un salarié
 // @Description Ajoute un nouveau salarié à la base de données
+// @Tags Salariés
 // @Accept  json
 // @Produce  json
 // @Param salarie body models.Salarie true "Détails du salarié"
 // @Success 201 {object} models.Salarie
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur serveur"
-// @Router /salaries [post]
+// @Router /api/salaries [post]
 func CreateSalarie(w http.ResponseWriter, r *http.Request) {
 	var salarie models.Salarie
 

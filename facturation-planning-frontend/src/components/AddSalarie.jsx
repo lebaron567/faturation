@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "../axiosInstance"; // au lieu de "axios"
-
+import axios from "../axiosInstance";
 
 const AddSalarie = () => {
   const [form, setForm] = useState({
@@ -15,11 +14,7 @@ const AddSalarie = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/profile", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const res = await axios.get("/profile");
         setEntrepriseId(res.data.id); // ✅ ID entreprise connecté
       } catch (err) {
         console.error("❌ Erreur lors du chargement du profil :", err);
@@ -39,25 +34,20 @@ const AddSalarie = () => {
     e.preventDefault();
 
     if (!entrepriseId) {
-      alert("⚠️ L’entreprise n’est pas encore chargée !");
+      alert("⚠️ L'entreprise n'est pas encore chargée !");
       return;
     }
 
     try {
-      await axios.post(
-        "http://localhost:8080/salaries",
-        { ...form, entreprise_id: entrepriseId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.post("/salaries", {
+        ...form,
+        entreprise_id: entrepriseId,
+      });
       alert("✅ Salarié ajouté !");
       setForm({ nom: "", email: "", telephone: "" });
     } catch (error) {
       console.error("❌ Erreur :", error.response?.data || error.message);
-      alert("❌ Impossible d’ajouter le salarié");
+      alert("❌ Impossible d'ajouter le salarié");
     }
   };
 

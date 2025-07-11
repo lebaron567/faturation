@@ -14,7 +14,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/register", form);
+      await axios.post("/register", form);
       alert("✅ Compte créé avec succès !");
       navigate("/login"); // ✅ redirection vers le login
     } catch (error) {

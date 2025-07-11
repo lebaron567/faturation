@@ -18,7 +18,6 @@ func SetupRoutes() *chi.Mux {
 
 	// Autres routes (protégées après connexion)
 	r.With(middlewares.JWTMiddleware).Get("/profile", controllers.GetProfile)
-	
 
 	// Entreprises
 	r.Get("/entreprises", controllers.GetEntreprises)
@@ -45,12 +44,10 @@ func SetupRoutes() *chi.Mux {
 	r.Get("/devis/{id}/pdf", controllers.GenerateDevisPDF)
 	r.Get("/devis/{id}/download", controllers.DownloadDevisPDF)
 	r.Patch("/devis/{id}/statut", controllers.UpdateDevisStatut)
-	
+
 	// Devis par entreprise et client
-	r.Get("/entreprises/{entrepriseId}/devis", controllers.GetDevisByEntreprise)
-	r.Get("/clients/{clientId}/devis", controllers.GetDevisByClient)
-
-
+	r.Get("/entreprises/{id}/devis", controllers.GetDevisByEntreprise)
+	r.Get("/clients/{id}/devis", controllers.GetDevisByClient)
 
 	// Plannings
 	r.Route("/plannings", func(r chi.Router) {
@@ -60,7 +57,6 @@ func SetupRoutes() *chi.Mux {
 		r.Put("/{id}", controllers.UpdatePlanning)
 		r.Delete("/{id}", controllers.DeletePlanning)
 	})
-
 
 	return r
 }

@@ -15,9 +15,11 @@ import (
 
 // @Summary Récupérer tous les plannings
 // @Description Retourne la liste complète des plannings enregistrés
+// @Tags Planning
 // @Produce json
 // @Success 200 {array} models.Planning
-// @Router /plannings [get]
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /api/plannings [get]
 func GetPlannings(w http.ResponseWriter, r *http.Request) {
 	var plannings []models.Planning
 	config.DB.Preload("Salarie").Find(&plannings)
@@ -26,13 +28,14 @@ func GetPlannings(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Créer un planning
 // @Description Ajoute un nouveau planning en base de données
+// @Tags Planning
 // @Accept json
 // @Produce json
 // @Param planning body models.Planning true "Détails du planning"
 // @Success 201 {object} models.Planning
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur serveur"
-// @Router /plannings [post]
+// @Router /api/plannings [post]
 func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	var planning models.Planning
 	if err := json.NewDecoder(r.Body).Decode(&planning); err != nil {
@@ -70,8 +73,6 @@ func CreatePlanning(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createdPlannings)
 }
-
-
 
 // @Summary Modifier un planning
 // @Description Met à jour un planning existant par son ID

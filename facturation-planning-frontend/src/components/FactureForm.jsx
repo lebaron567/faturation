@@ -21,7 +21,7 @@ const FactureForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8080/factures", facture);
+      const response = await axios.post("/factures", facture);
       setPdfUrl(response.data.pdf);
     } catch (error) {
       console.error("Erreur lors de la création de la facture", error);

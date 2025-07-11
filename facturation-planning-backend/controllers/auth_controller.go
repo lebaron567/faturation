@@ -14,6 +14,7 @@ import (
 
 // @Summary Créer une entreprise (inscription)
 // @Description Permet de créer un compte entreprise en renseignant un nom, un email et un mot de passe
+// @Tags Authentification
 // @Accept  json
 // @Produce  json
 // @Param entreprise body models.RegisterEntrepriseRequest true "Détails de l'entreprise"
@@ -21,7 +22,7 @@ import (
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 409 {string} string "Email déjà utilisé"
 // @Failure 500 {string} string "Erreur serveur"
-// @Router /register [post]
+// @Router /api/register [post]
 func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Nom      string `json:"nom"`
@@ -34,8 +35,6 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erreur de décodage JSON", http.StatusBadRequest)
 		return
 	}
-
-
 
 	// Vérifier si les champs sont remplis
 	if input.Email == "" || input.Password == "" || input.Nom == "" {
@@ -60,7 +59,6 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	// Créer l'entreprise avec les données validées
 	entreprise := models.Entreprise{
 		Nom:      input.Nom,
@@ -76,13 +74,13 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("✅ Compte enregistré : %s (%s)\n", entreprise.Nom, entreprise.Email)
 
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Compte entreprise créé avec succès"})
 }
 
 // @Summary Connexion d'une entreprise
 // @Description Permet de se connecter avec un email et un mot de passe pour récupérer un token JWT
+// @Tags Authentification
 // @Accept  json
 // @Produce  json
 // @Param credentials body models.LoginRequest true "Identifiants de connexion"
@@ -90,7 +88,7 @@ func RegisterEntreprise(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 401 {string} string "Email ou mot de passe incorrect"
 // @Failure 500 {string} string "Erreur serveur"
-// @Router /login [post]
+// @Router /api/login [post]
 func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email    string `json:"email"`
@@ -117,7 +115,6 @@ func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("❌ Compte non trouvé :", result.Error)
 		return
 	}
-
 
 	// Supprimer les espaces invisibles du mot de passe fourni
 	input.Password = strings.TrimSpace(input.Password)

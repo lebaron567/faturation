@@ -11,10 +11,20 @@ import (
 	"net/http"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 // CreateDevis godoc
+// @Summary Créer un nouveau devis
+// @Description Crée un nouveau devis avec validation des données d'entreprise et de client
+// @Tags Devis
+// @Accept json
+// @Produce json
+// @Param devis body models.Devis true "Données du devis à créer"
+// @Success 201 {object} models.Devis "Devis créé avec succès"
+// @Failure 400 {string} string "Erreur de validation des données"
+// @Failure 500 {string} string "Erreur interne du serveur"
+// @Router /api/devis [post]
 func CreateDevis(w http.ResponseWriter, r *http.Request) {
 	var devis models.Devis
 
@@ -54,6 +64,13 @@ func CreateDevis(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllDevis godoc
+// @Summary Récupérer tous les devis
+// @Description Récupère la liste complète de tous les devis avec leurs lignes, entreprises et clients
+// @Tags Devis
+// @Produce json
+// @Success 200 {array} models.Devis "Liste de tous les devis avec totaux calculés"
+// @Failure 500 {string} string "Erreur lors de la récupération des devis"
+// @Router /api/devis [get]
 func GetAllDevis(w http.ResponseWriter, r *http.Request) {
 	var devis []models.Devis
 
@@ -99,6 +116,16 @@ type DevisPDFData struct {
 	Company         config.CompanyInfo
 }
 
+// GenerateDevisPDF godoc
+// @Summary Générer un PDF de devis pour affichage
+// @Description Génère un devis au format PDF pour affichage dans le navigateur
+// @Tags Devis
+// @Produce application/pdf
+// @Param id path string true "ID du devis à convertir en PDF"
+// @Success 200 {file} file "Fichier PDF généré pour affichage"
+// @Failure 404 {string} string "Devis introuvable"
+// @Failure 500 {string} string "Erreur lors de la génération du PDF"
+// @Router /api/devis/{id}/pdf [get]
 func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -216,7 +243,16 @@ func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
 }
 
-// DownloadDevisPDF génère et télécharge un devis en PDF
+// DownloadDevisPDF godoc
+// @Summary Télécharger un devis en PDF
+// @Description Génère et force le téléchargement d'un devis au format PDF
+// @Tags Devis
+// @Produce application/pdf
+// @Param id path string true "ID du devis à télécharger"
+// @Success 200 {file} file "Fichier PDF à télécharger"
+// @Failure 404 {string} string "Devis introuvable"
+// @Failure 500 {string} string "Erreur lors de la génération du PDF"
+// @Router /api/devis/{id}/download [get]
 func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -329,7 +365,15 @@ func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
 }
 
-// GetDevis récupère un devis par ID
+// GetDevis godoc
+// @Summary Récupérer un devis par son ID
+// @Description Récupère un devis spécifique avec ses lignes, entreprise et client
+// @Tags Devis
+// @Produce json
+// @Param id path string true "ID du devis à récupérer"
+// @Success 200 {object} models.Devis "Devis trouvé avec totaux calculés"
+// @Failure 404 {string} string "Devis introuvable"
+// @Router /api/devis/{id} [get]
 func GetDevis(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -346,7 +390,18 @@ func GetDevis(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(devis)
 }
 
-// UpdateDevis met à jour un devis existant
+// UpdateDevis godoc
+// @Summary Mettre à jour un devis existant
+// @Description Met à jour un devis existant avec validation des données
+// @Tags Devis
+// @Accept json
+// @Produce json
+// @Param id path string true "ID du devis à modifier"
+// @Param devis body models.Devis true "Nouvelles données du devis"
+// @Success 200 {object} models.Devis "Devis mis à jour avec succès"
+// @Failure 400 {string} string "Erreur de validation des données"
+// @Failure 500 {string} string "Erreur lors de la mise à jour"
+// @Router /api/devis/{id} [put]
 func UpdateDevis(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var devis models.Devis
@@ -380,7 +435,14 @@ func UpdateDevis(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(devis)
 }
 
-// DeleteDevis supprime un devis
+// DeleteDevis godoc
+// @Summary Supprimer un devis
+// @Description Supprime définitivement un devis du système
+// @Tags Devis
+// @Param id path string true "ID du devis à supprimer"
+// @Success 204 "Devis supprimé avec succès"
+// @Failure 500 {string} string "Erreur lors de la suppression"
+// @Router /api/devis/{id} [delete]
 func DeleteDevis(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -392,13 +454,31 @@ func DeleteDevis(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GetDevisByEntreprise récupère tous les devis d'une entreprise
+// GetDevisByEntreprise godoc
+// @Summary Récupérer tous les devis d'une entreprise
+// @Description Récupère la liste de tous les devis appartenant à une entreprise spécifique
+// @Tags Devis
+// @Produce json
+// @Param id path string true "ID de l'entreprise"
+// @Success 200 {array} models.Devis "Liste des devis de l'entreprise"
+// @Failure 400 {string} string "ID entreprise manquant"
+// @Failure 500 {string} string "Erreur lors de la récupération"
+// @Router /api/entreprises/{id}/devis [get]
 func GetDevisByEntreprise(w http.ResponseWriter, r *http.Request) {
-	entrepriseID := chi.URLParam(r, "entrepriseId")
+	entrepriseID := chi.URLParam(r, "id")
+
+	fmt.Printf("DEBUG: entrepriseID récupéré = '%s'\n", entrepriseID) // Pour déboguer
+
+	// Vérifier que l'ID n'est pas vide
+	if entrepriseID == "" {
+		http.Error(w, "ID entreprise manquant", http.StatusBadRequest)
+		return
+	}
 
 	var devis []models.Devis
-	if err := config.DB.Where("entreprise_id = ?", entrepriseID).Preload("Lignes").Preload("Entreprise").Preload("Client").Find(&devis).Error; err != nil {
-		http.Error(w, "Erreur lors de la récupération des devis", http.StatusInternalServerError)
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").
+		Where("entreprise_id = ?", entrepriseID).Find(&devis).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -411,13 +491,29 @@ func GetDevisByEntreprise(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(devis)
 }
 
-// GetDevisByClient récupère tous les devis d'un client
+// GetDevisByClient godoc
+// @Summary Récupérer tous les devis d'un client
+// @Description Récupère la liste de tous les devis appartenant à un client spécifique
+// @Tags Devis
+// @Produce json
+// @Param id path string true "ID du client"
+// @Success 200 {array} models.Devis "Liste des devis du client"
+// @Failure 400 {string} string "ID client manquant"
+// @Failure 500 {string} string "Erreur lors de la récupération"
+// @Router /api/clients/{id}/devis [get]
 func GetDevisByClient(w http.ResponseWriter, r *http.Request) {
-	clientID := chi.URLParam(r, "clientId")
+	clientID := chi.URLParam(r, "id")
+
+	// Vérifier que l'ID n'est pas vide
+	if clientID == "" {
+		http.Error(w, "ID client manquant", http.StatusBadRequest)
+		return
+	}
 
 	var devis []models.Devis
-	if err := config.DB.Where("client_id = ?", clientID).Preload("Lignes").Preload("Entreprise").Preload("Client").Find(&devis).Error; err != nil {
-		http.Error(w, "Erreur lors de la récupération des devis", http.StatusInternalServerError)
+	if err := config.DB.Preload("Lignes").Preload("Entreprise").Preload("Client").
+		Where("client_id = ?", clientID).Find(&devis).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -430,7 +526,18 @@ func GetDevisByClient(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(devis)
 }
 
-// UpdateDevisStatut met à jour le statut d'un devis
+// UpdateDevisStatut godoc
+// @Summary Mettre à jour le statut d'un devis
+// @Description Met à jour uniquement le statut d'un devis (brouillon, envoyé, accepté, refusé, expiré)
+// @Tags Devis
+// @Accept json
+// @Produce json
+// @Param id path string true "ID du devis"
+// @Param statut body object{statut=string} true "Nouveau statut du devis"
+// @Success 200 {object} models.Devis "Devis avec statut mis à jour"
+// @Failure 400 {string} string "Statut invalide"
+// @Failure 500 {string} string "Erreur lors de la mise à jour du statut"
+// @Router /api/devis/{id}/statut [patch]
 func UpdateDevisStatut(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -479,6 +586,7 @@ func UpdateDevisStatut(w http.ResponseWriter, r *http.Request) {
 }
 
 // calculateTotals calcule les totaux pour un devis
+// Fonction utilitaire interne pour calculer automatiquement les montants HT, TVA et TTC
 func calculateTotals(devis *models.Devis) {
 	var sousTotalHT, totalTVA, totalTTC float64
 
@@ -498,6 +606,7 @@ func calculateTotals(devis *models.Devis) {
 }
 
 // validateDevisData valide les données d'un devis
+// Fonction utilitaire interne pour valider l'existence de l'entreprise et du client
 func validateDevisData(devis *models.Devis) error {
 	// Vérifier que l'entreprise existe
 	var entreprise models.Entreprise

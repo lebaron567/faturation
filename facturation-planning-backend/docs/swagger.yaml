@@ -3,25 +3,79 @@ definitions:
   models.Client:
     properties:
       adresse:
+        example: 123 rue de la Paix, 75001 Paris
         type: string
       created_at:
-        type: string
-      deleted_at:
+        example: "2025-06-10T10:00:00Z"
         type: string
       email:
+        example: contact@acme.com
         type: string
       entreprise_id:
+        example: 1
         type: integer
       id:
+        example: 1
         type: integer
       nom:
+        example: ACME Corporation
         type: string
       telephone:
+        example: "+33123456789"
         type: string
       updated_at:
+        example: "2025-06-10T10:00:00Z"
         type: string
     type: object
   models.Devis:
+    properties:
+      client:
+        $ref: '#/definitions/models.Client'
+      client_id:
+        type: integer
+      conditions:
+        example: Paiement sous 30 jours
+        type: string
+      created_at:
+        example: "2025-06-10T10:00:00Z"
+        type: string
+      date_devis:
+        example: "2025-06-10T00:00:00Z"
+        type: string
+      date_expiration:
+        example: "2025-07-10T00:00:00Z"
+        type: string
+      entreprise:
+        allOf:
+        - $ref: '#/definitions/models.Entreprise'
+        description: Relations
+      entreprise_id:
+        type: integer
+      id:
+        description: Champs GORM
+        example: 1
+        type: integer
+      lignes:
+        items:
+          $ref: '#/definitions/models.LigneDevis'
+        type: array
+      objet:
+        example: Développement application web
+        type: string
+      sous_total_ht:
+        description: Champs calculés (ne pas stocker en base)
+        type: number
+      statut:
+        description: brouillon, envoyé, accepté, refusé
+        example: brouillon
+        type: string
+      total_ttc:
+        type: number
+      total_tva:
+        type: number
+      updated_at:
+        example: "2025-06-10T10:00:00Z"
+        type: string
     type: object
   models.Entreprise:
     properties:
@@ -114,6 +168,31 @@ definitions:
         example: "2025-03-17T14:09:30.706109+01:00"
         type: string
     type: object
+  models.LigneDevis:
+    properties:
+      created_at:
+        example: "2025-06-10T10:00:00Z"
+        type: string
+      description:
+        example: Développement site web
+        type: string
+      id:
+        description: Champs GORM
+        example: 1
+        type: integer
+      prix_unitaire:
+        example: 1500
+        type: number
+      quantite:
+        example: 1
+        type: integer
+      tva:
+        example: 20
+        type: number
+      updated_at:
+        example: "2025-06-10T10:00:00Z"
+        type: string
+    type: object
   models.LoginRequest:
     properties:
       email:
@@ -130,47 +209,61 @@ definitions:
         - $ref: '#/definitions/models.Client'
         description: <-- ajoute cette ligne
       client_id:
+        example: 1
         type: integer
       created_at:
+        example: "2025-06-10T10:00:00Z"
         type: string
       date:
-        type: string
-      deleted_at:
+        example: "2025-06-15"
         type: string
       entreprise_id:
+        example: 1
         type: integer
       facturation:
+        example: À facturer
         type: string
       facture:
         $ref: '#/definitions/models.Facture'
       forfait_ht:
+        example: 0
         type: number
       heure_debut:
+        example: "09:00"
         type: string
       heure_fin:
+        example: "17:00"
         type: string
       id:
+        example: 1
         type: integer
       nb_repetitions:
         description: combien de fois on le répète
         type: integer
       objet:
+        example: Maintenance système
         type: string
       periodicite:
+        example: 0
         type: integer
       prestation:
+        example: Support technique
         type: string
       salarie:
         allOf:
         - $ref: '#/definitions/models.Salarie'
         description: ✅ Corrigé
       salarie_id:
+        example: 1
         type: integer
       taux_horaire:
+        example: 45.5
         type: number
       type_evenement:
+        example: Intervention
         type: string
       updated_at:
+        example: "2025-06-10T10:00:00Z"
         type: string
     type: object
   models.RegisterEntrepriseRequest:
@@ -218,12 +311,110 @@ info:
   title: Facturation API
   version: "1.0"
 paths:
-  /devis:
+  /api/clients:
+    get:
+      consumes:
+      - application/json
+      description: Retourne la liste complète de tous les clients
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Client'
+            type: array
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Récupérer tous les clients
+      tags:
+      - Clients
     post:
       consumes:
       - application/json
-      description: Crée un devis avec les informations client, les dates et les lignes
-        de devis
+      description: Crée un nouveau client avec les informations fournies
+      parameters:
+      - description: Informations du client
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/models.Client'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Client'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer un nouveau client
+      tags:
+      - Clients
+  /api/clients/{id}/devis:
+    get:
+      description: Récupère la liste de tous les devis appartenant à un client spécifique
+      parameters:
+      - description: ID du client
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des devis du client
+          schema:
+            items:
+              $ref: '#/definitions/models.Devis'
+            type: array
+        "400":
+          description: ID client manquant
+          schema:
+            type: string
+        "500":
+          description: Erreur lors de la récupération
+          schema:
+            type: string
+      summary: Récupérer tous les devis d'un client
+      tags:
+      - Devis
+  /api/devis:
+    get:
+      description: Récupère la liste complète de tous les devis avec leurs lignes,
+        entreprises et clients
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste de tous les devis avec totaux calculés
+          schema:
+            items:
+              $ref: '#/definitions/models.Devis'
+            type: array
+        "500":
+          description: Erreur lors de la récupération des devis
+          schema:
+            type: string
+      summary: Récupérer tous les devis
+      tags:
+      - Devis
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau devis avec validation des données d'entreprise
+        et de client
       parameters:
       - description: Données du devis à créer
         in: body
@@ -235,9 +426,227 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Devis créé avec succès
           schema:
             $ref: '#/definitions/models.Devis'
+        "400":
+          description: Erreur de validation des données
+          schema:
+            type: string
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            type: string
+      summary: Créer un nouveau devis
+      tags:
+      - Devis
+  /api/devis/{id}:
+    delete:
+      description: Supprime définitivement un devis du système
+      parameters:
+      - description: ID du devis à supprimer
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Devis supprimé avec succès
+        "500":
+          description: Erreur lors de la suppression
+          schema:
+            type: string
+      summary: Supprimer un devis
+      tags:
+      - Devis
+    get:
+      description: Récupère un devis spécifique avec ses lignes, entreprise et client
+      parameters:
+      - description: ID du devis à récupérer
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Devis trouvé avec totaux calculés
+          schema:
+            $ref: '#/definitions/models.Devis'
+        "404":
+          description: Devis introuvable
+          schema:
+            type: string
+      summary: Récupérer un devis par son ID
+      tags:
+      - Devis
+    put:
+      consumes:
+      - application/json
+      description: Met à jour un devis existant avec validation des données
+      parameters:
+      - description: ID du devis à modifier
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Nouvelles données du devis
+        in: body
+        name: devis
+        required: true
+        schema:
+          $ref: '#/definitions/models.Devis'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Devis mis à jour avec succès
+          schema:
+            $ref: '#/definitions/models.Devis'
+        "400":
+          description: Erreur de validation des données
+          schema:
+            type: string
+        "500":
+          description: Erreur lors de la mise à jour
+          schema:
+            type: string
+      summary: Mettre à jour un devis existant
+      tags:
+      - Devis
+  /api/devis/{id}/download:
+    get:
+      description: Génère et force le téléchargement d'un devis au format PDF
+      parameters:
+      - description: ID du devis à télécharger
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: Fichier PDF à télécharger
+          schema:
+            type: file
+        "404":
+          description: Devis introuvable
+          schema:
+            type: string
+        "500":
+          description: Erreur lors de la génération du PDF
+          schema:
+            type: string
+      summary: Télécharger un devis en PDF
+      tags:
+      - Devis
+  /api/devis/{id}/pdf:
+    get:
+      description: Génère un devis au format PDF pour affichage dans le navigateur
+      parameters:
+      - description: ID du devis à convertir en PDF
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: Fichier PDF généré pour affichage
+          schema:
+            type: file
+        "404":
+          description: Devis introuvable
+          schema:
+            type: string
+        "500":
+          description: Erreur lors de la génération du PDF
+          schema:
+            type: string
+      summary: Générer un PDF de devis pour affichage
+      tags:
+      - Devis
+  /api/devis/{id}/statut:
+    patch:
+      consumes:
+      - application/json
+      description: Met à jour uniquement le statut d'un devis (brouillon, envoyé,
+        accepté, refusé, expiré)
+      parameters:
+      - description: ID du devis
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Nouveau statut du devis
+        in: body
+        name: statut
+        required: true
+        schema:
+          properties:
+            statut:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Devis avec statut mis à jour
+          schema:
+            $ref: '#/definitions/models.Devis'
+        "400":
+          description: Statut invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur lors de la mise à jour du statut
+          schema:
+            type: string
+      summary: Mettre à jour le statut d'un devis
+      tags:
+      - Devis
+  /api/entreprises:
+    get:
+      consumes:
+      - application/json
+      description: Retourne la liste complète de toutes les entreprises
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Entreprise'
+            type: array
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Récupérer toutes les entreprises
+      tags:
+      - Entreprises
+    post:
+      consumes:
+      - application/json
+      description: Crée une nouvelle entreprise avec les informations fournies
+      parameters:
+      - description: Informations de l'entreprise
+        in: body
+        name: entreprise
+        required: true
+        schema:
+          $ref: '#/definitions/models.Entreprise'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Entreprise'
         "400":
           description: Requête invalide
           schema:
@@ -246,10 +655,40 @@ paths:
           description: Erreur serveur
           schema:
             type: string
-      summary: Créer un devis complet
+      summary: Créer une nouvelle entreprise
+      tags:
+      - Entreprises
+  /api/entreprises/{id}/devis:
+    get:
+      description: Récupère la liste de tous les devis appartenant à une entreprise
+        spécifique
+      parameters:
+      - description: ID de l'entreprise
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des devis de l'entreprise
+          schema:
+            items:
+              $ref: '#/definitions/models.Devis'
+            type: array
+        "400":
+          description: ID entreprise manquant
+          schema:
+            type: string
+        "500":
+          description: Erreur lors de la récupération
+          schema:
+            type: string
+      summary: Récupérer tous les devis d'une entreprise
       tags:
       - Devis
-  /factures:
+  /api/factures:
     get:
       description: Retourne la liste complète des factures en base de données
       produces:
@@ -261,7 +700,13 @@ paths:
             items:
               $ref: '#/definitions/models.Facture'
             type: array
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
       summary: Lister toutes les factures
+      tags:
+      - Factures
     post:
       consumes:
       - application/json
@@ -289,7 +734,9 @@ paths:
           schema:
             type: string
       summary: Créer une facture
-  /factures/{id}/pdf:
+      tags:
+      - Factures
+  /api/factures/{id}/pdf:
     get:
       description: Génère un PDF pour une facture donnée
       parameters:
@@ -309,8 +756,14 @@ paths:
           description: Facture non trouvée
           schema:
             type: string
+        "500":
+          description: Erreur lors de la génération du PDF
+          schema:
+            type: string
       summary: Récupérer une facture en PDF
-  /login:
+      tags:
+      - Factures
+  /api/login:
     post:
       consumes:
       - application/json
@@ -345,7 +798,9 @@ paths:
           schema:
             type: string
       summary: Connexion d'une entreprise
-  /plannings:
+      tags:
+      - Authentification
+  /api/plannings:
     get:
       description: Retourne la liste complète des plannings enregistrés
       produces:
@@ -357,7 +812,13 @@ paths:
             items:
               $ref: '#/definitions/models.Planning'
             type: array
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
       summary: Récupérer tous les plannings
+      tags:
+      - Planning
     post:
       consumes:
       - application/json
@@ -385,6 +846,93 @@ paths:
           schema:
             type: string
       summary: Créer un planning
+      tags:
+      - Planning
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Permet de créer un compte entreprise en renseignant un nom, un
+        email et un mot de passe
+      parameters:
+      - description: Détails de l'entreprise
+        in: body
+        name: entreprise
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterEntrepriseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Compte créé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "409":
+          description: Email déjà utilisé
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer une entreprise (inscription)
+      tags:
+      - Authentification
+  /api/salaries:
+    get:
+      description: Retourne la liste des salariés enregistrés
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Salarie'
+            type: array
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Récupérer tous les salariés
+      tags:
+      - Salariés
+    post:
+      consumes:
+      - application/json
+      description: Ajoute un nouveau salarié à la base de données
+      parameters:
+      - description: Détails du salarié
+        in: body
+        name: salarie
+        required: true
+        schema:
+          $ref: '#/definitions/models.Salarie'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Salarie'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      summary: Créer un salarié
+      tags:
+      - Salariés
   /plannings/{id}:
     delete:
       description: Supprime un planning par son ID
@@ -459,79 +1007,4 @@ paths:
       security:
       - BearerAuth: []
       summary: Récupérer le profil de l'entreprise connectée
-  /register:
-    post:
-      consumes:
-      - application/json
-      description: Permet de créer un compte entreprise en renseignant un nom, un
-        email et un mot de passe
-      parameters:
-      - description: Détails de l'entreprise
-        in: body
-        name: entreprise
-        required: true
-        schema:
-          $ref: '#/definitions/models.RegisterEntrepriseRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Compte créé avec succès
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Requête invalide
-          schema:
-            type: string
-        "409":
-          description: Email déjà utilisé
-          schema:
-            type: string
-        "500":
-          description: Erreur serveur
-          schema:
-            type: string
-      summary: Créer une entreprise (inscription)
-  /salaries:
-    get:
-      description: Retourne la liste des salariés enregistrés
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Salarie'
-            type: array
-      summary: Récupérer tous les salariés
-    post:
-      consumes:
-      - application/json
-      description: Ajoute un nouveau salarié à la base de données
-      parameters:
-      - description: Détails du salarié
-        in: body
-        name: salarie
-        required: true
-        schema:
-          $ref: '#/definitions/models.Salarie'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.Salarie'
-        "400":
-          description: Requête invalide
-          schema:
-            type: string
-        "500":
-          description: Erreur serveur
-          schema:
-            type: string
-      summary: Créer un salarié
 swagger: "2.0"

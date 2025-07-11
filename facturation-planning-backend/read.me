@@ -60,4 +60,67 @@ UPDATE plannings SET objet = 'MAJ test' WHERE id = 42;
 \q
 ```
 
-Tu veux un exemple spécifique de requête pour corriger un `salarie_id` invalide, par exemple ?
+Tu veux un exemple spécifique de requête pour corriger un `salarie_id` invalide, par exemple ?
+
+---
+
+## 📚 **Documentation Swagger API**
+
+### ✅ 1. **Installer swag (si pas encore fait)**
+
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+### ✅ 2. **Générer la documentation Swagger**
+
+Après avoir ajouté ou modifié les commentaires Swagger dans vos contrôleurs :
+
+```bash
+swag init
+```
+
+Ou si votre main.go n'est pas à la racine :
+
+```bash
+swag init -g cmd/main.go
+```
+
+### ✅ 3. **Accéder à la documentation**
+
+Une fois le serveur lancé, la documentation Swagger sera disponible à :
+
+```
+http://localhost:8080/swagger/index.html
+```
+
+### ✅ 4. **Structure des commentaires Swagger**
+
+Exemple de commentaire pour une fonction :
+
+```go
+// @Summary Résumé de la fonction
+// @Description Description détaillée
+// @Tags Nom_du_tag
+// @Accept json
+// @Produce json
+// @Param id path string true "Description du paramètre"
+// @Success 200 {object} models.MonModel
+// @Failure 400 {string} string "Message d'erreur"
+// @Router /api/mon-endpoint [get]
+```
+
+### ✅ 5. **Commandes utiles**
+
+- **Régénérer après modifications** : `swag init`
+- **Vérifier la syntaxe** : `swag fmt`
+- **Version de swag** : `swag --version`
+
+### ✅ 6. **Fichiers générés**
+
+Après `swag init`, ces fichiers sont créés automatiquement :
+- `docs/docs.go`
+- `docs/swagger.json`
+- `docs/swagger.yaml`
+
+> ⚠️ **Important** : Ne pas modifier manuellement les fichiers dans le dossier `docs/`

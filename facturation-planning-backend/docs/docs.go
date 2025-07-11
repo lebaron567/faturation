@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/devis": {
-            "post": {
-                "description": "Crée un devis avec les informations client, les dates et les lignes de devis",
+        "/api/clients": {
+            "get": {
+                "description": "Retourne la liste complète de tous les clients",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,17 +25,47 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Devis"
+                    "Clients"
                 ],
-                "summary": "Créer un devis complet",
+                "summary": "Récupérer tous les clients",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Client"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crée un nouveau client avec les informations fournies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Créer un nouveau client",
                 "parameters": [
                     {
-                        "description": "Données du devis à créer",
-                        "name": "devis",
+                        "description": "Informations du client",
+                        "name": "client",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Devis"
+                            "$ref": "#/definitions/models.Client"
                         }
                     }
                 ],
@@ -43,7 +73,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.Devis"
+                            "$ref": "#/definitions/models.Client"
                         }
                     },
                     "400": {
@@ -61,11 +91,504 @@ const docTemplate = `{
                 }
             }
         },
-        "/factures": {
+        "/api/clients/{id}/devis": {
+            "get": {
+                "description": "Récupère la liste de tous les devis appartenant à un client spécifique",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Récupérer tous les devis d'un client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du client",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des devis du client",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Devis"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ID client manquant",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/devis": {
+            "get": {
+                "description": "Récupère la liste complète de tous les devis avec leurs lignes, entreprises et clients",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Récupérer tous les devis",
+                "responses": {
+                    "200": {
+                        "description": "Liste de tous les devis avec totaux calculés",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Devis"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des devis",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crée un nouveau devis avec validation des données d'entreprise et de client",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Créer un nouveau devis",
+                "parameters": [
+                    {
+                        "description": "Données du devis à créer",
+                        "name": "devis",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Devis créé avec succès",
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/devis/{id}": {
+            "get": {
+                "description": "Récupère un devis spécifique avec ses lignes, entreprise et client",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Récupérer un devis par son ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du devis à récupérer",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Devis trouvé avec totaux calculés",
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    },
+                    "404": {
+                        "description": "Devis introuvable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Met à jour un devis existant avec validation des données",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Mettre à jour un devis existant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du devis à modifier",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nouvelles données du devis",
+                        "name": "devis",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Devis mis à jour avec succès",
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la mise à jour",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Supprime définitivement un devis du système",
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Supprimer un devis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du devis à supprimer",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Devis supprimé avec succès"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la suppression",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/devis/{id}/download": {
+            "get": {
+                "description": "Génère et force le téléchargement d'un devis au format PDF",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Télécharger un devis en PDF",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du devis à télécharger",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF à télécharger",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Devis introuvable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la génération du PDF",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/devis/{id}/pdf": {
+            "get": {
+                "description": "Génère un devis au format PDF pour affichage dans le navigateur",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Générer un PDF de devis pour affichage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du devis à convertir en PDF",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF généré pour affichage",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Devis introuvable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la génération du PDF",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/devis/{id}/statut": {
+            "patch": {
+                "description": "Met à jour uniquement le statut d'un devis (brouillon, envoyé, accepté, refusé, expiré)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Mettre à jour le statut d'un devis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID du devis",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nouveau statut du devis",
+                        "name": "statut",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statut": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Devis avec statut mis à jour",
+                        "schema": {
+                            "$ref": "#/definitions/models.Devis"
+                        }
+                    },
+                    "400": {
+                        "description": "Statut invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la mise à jour du statut",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/entreprises": {
+            "get": {
+                "description": "Retourne la liste complète de toutes les entreprises",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Entreprises"
+                ],
+                "summary": "Récupérer toutes les entreprises",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Entreprise"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crée une nouvelle entreprise avec les informations fournies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Entreprises"
+                ],
+                "summary": "Créer une nouvelle entreprise",
+                "parameters": [
+                    {
+                        "description": "Informations de l'entreprise",
+                        "name": "entreprise",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Entreprise"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Entreprise"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/entreprises/{id}/devis": {
+            "get": {
+                "description": "Récupère la liste de tous les devis appartenant à une entreprise spécifique",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Devis"
+                ],
+                "summary": "Récupérer tous les devis d'une entreprise",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID de l'entreprise",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des devis de l'entreprise",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Devis"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ID entreprise manquant",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/factures": {
             "get": {
                 "description": "Retourne la liste complète des factures en base de données",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Factures"
                 ],
                 "summary": "Lister toutes les factures",
                 "responses": {
@@ -77,6 +600,12 @@ const docTemplate = `{
                                 "$ref": "#/definitions/models.Facture"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -87,6 +616,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Factures"
                 ],
                 "summary": "Créer une facture",
                 "parameters": [
@@ -122,11 +654,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/factures/{id}/pdf": {
+        "/api/factures/{id}/pdf": {
             "get": {
                 "description": "Génère un PDF pour une facture donnée",
                 "produces": [
                     "application/pdf"
+                ],
+                "tags": [
+                    "Factures"
                 ],
                 "summary": "Récupérer une facture en PDF",
                 "parameters": [
@@ -150,11 +685,17 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la génération du PDF",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
         },
-        "/login": {
+        "/api/login": {
             "post": {
                 "description": "Permet de se connecter avec un email et un mot de passe pour récupérer un token JWT",
                 "consumes": [
@@ -162,6 +703,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Authentification"
                 ],
                 "summary": "Connexion d'une entreprise",
                 "parameters": [
@@ -206,11 +750,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/plannings": {
+        "/api/plannings": {
             "get": {
                 "description": "Retourne la liste complète des plannings enregistrés",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Planning"
                 ],
                 "summary": "Récupérer tous les plannings",
                 "responses": {
@@ -222,6 +769,12 @@ const docTemplate = `{
                                 "$ref": "#/definitions/models.Planning"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -232,6 +785,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Planning"
                 ],
                 "summary": "Créer un planning",
                 "parameters": [
@@ -250,6 +806,134 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/models.Planning"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/register": {
+            "post": {
+                "description": "Permet de créer un compte entreprise en renseignant un nom, un email et un mot de passe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Créer une entreprise (inscription)",
+                "parameters": [
+                    {
+                        "description": "Détails de l'entreprise",
+                        "name": "entreprise",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterEntrepriseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Compte créé avec succès",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Email déjà utilisé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/salaries": {
+            "get": {
+                "description": "Retourne la liste des salariés enregistrés",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Salariés"
+                ],
+                "summary": "Récupérer tous les salariés",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Salarie"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Ajoute un nouveau salarié à la base de données",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Salariés"
+                ],
+                "summary": "Créer un salarié",
+                "parameters": [
+                    {
+                        "description": "Détails du salarié",
+                        "name": "salarie",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Salarie"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Salarie"
                         }
                     },
                     "400": {
@@ -380,119 +1064,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/register": {
-            "post": {
-                "description": "Permet de créer un compte entreprise en renseignant un nom, un email et un mot de passe",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Créer une entreprise (inscription)",
-                "parameters": [
-                    {
-                        "description": "Détails de l'entreprise",
-                        "name": "entreprise",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.RegisterEntrepriseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Compte créé avec succès",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Requête invalide",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "409": {
-                        "description": "Email déjà utilisé",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/salaries": {
-            "get": {
-                "description": "Retourne la liste des salariés enregistrés",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Récupérer tous les salariés",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Salarie"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Ajoute un nouveau salarié à la base de données",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Créer un salarié",
-                "parameters": [
-                    {
-                        "description": "Détails du salarié",
-                        "name": "salarie",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Salarie"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.Salarie"
-                        }
-                    },
-                    "400": {
-                        "description": "Requête invalide",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -500,36 +1071,110 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "adresse": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "123 rue de la Paix, 75001 Paris"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "contact@acme.com"
+                },
+                "entreprise_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nom": {
+                    "type": "string",
+                    "example": "ACME Corporation"
+                },
+                "telephone": {
+                    "type": "string",
+                    "example": "+33123456789"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
+                }
+            }
+        },
+        "models.Devis": {
+            "type": "object",
+            "properties": {
+                "client": {
+                    "$ref": "#/definitions/models.Client"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "conditions": {
+                    "type": "string",
+                    "example": "Paiement sous 30 jours"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
+                },
+                "date_devis": {
+                    "type": "string",
+                    "example": "2025-06-10T00:00:00Z"
+                },
+                "date_expiration": {
+                    "type": "string",
+                    "example": "2025-07-10T00:00:00Z"
+                },
+                "entreprise": {
+                    "description": "Relations",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Entreprise"
+                        }
+                    ]
                 },
                 "entreprise_id": {
                     "type": "integer"
                 },
                 "id": {
-                    "type": "integer"
+                    "description": "Champs GORM",
+                    "type": "integer",
+                    "example": 1
                 },
-                "nom": {
-                    "type": "string"
+                "lignes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.LigneDevis"
+                    }
                 },
-                "telephone": {
-                    "type": "string"
+                "objet": {
+                    "type": "string",
+                    "example": "Développement application web"
+                },
+                "sous_total_ht": {
+                    "description": "Champs calculés (ne pas stocker en base)",
+                    "type": "number"
+                },
+                "statut": {
+                    "description": "brouillon, envoyé, accepté, refusé",
+                    "type": "string",
+                    "example": "brouillon"
+                },
+                "total_ttc": {
+                    "type": "number"
+                },
+                "total_tva": {
+                    "type": "number"
                 },
                 "updated_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
                 }
             }
-        },
-        "models.Devis": {
-            "type": "object"
         },
         "models.Entreprise": {
             "type": "object",
@@ -654,6 +1299,40 @@ const docTemplate = `{
                 }
             }
         },
+        "models.LigneDevis": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Développement site web"
+                },
+                "id": {
+                    "description": "Champs GORM",
+                    "type": "integer",
+                    "example": 1
+                },
+                "prix_unitaire": {
+                    "type": "number",
+                    "example": 1500
+                },
+                "quantite": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tva": {
+                    "type": "number",
+                    "example": 20
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
+                }
+            }
+        },
         "models.LoginRequest": {
             "type": "object",
             "properties": {
@@ -679,50 +1358,59 @@ const docTemplate = `{
                     ]
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "created_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
                 },
                 "date": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-06-15"
                 },
                 "entreprise_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "facturation": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "À facturer"
                 },
                 "facture": {
                     "$ref": "#/definitions/models.Facture"
                 },
                 "forfait_ht": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 0
                 },
                 "heure_debut": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "09:00"
                 },
                 "heure_fin": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "17:00"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "nb_repetitions": {
                     "description": "combien de fois on le répète",
                     "type": "integer"
                 },
                 "objet": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Maintenance système"
                 },
                 "periodicite": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 0
                 },
                 "prestation": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Support technique"
                 },
                 "salarie": {
                     "description": "✅ Corrigé",
@@ -733,16 +1421,20 @@ const docTemplate = `{
                     ]
                 },
                 "salarie_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "taux_horaire": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 45.5
                 },
                 "type_evenement": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Intervention"
                 },
                 "updated_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-06-10T10:00:00Z"
                 }
             }
         },
