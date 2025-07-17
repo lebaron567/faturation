@@ -12,7 +12,7 @@ const DevisFormComplet = () => {
   });
 
   const [lignes, setLignes] = useState([
-    { description: "", quantite: 1, prix_unitaire: 0, tva: 20 },
+    { description: "", quantite: 1, prix_unitaire: "", tva: 20 },
   ]);
 
   const [clients, setClients] = useState([]);
@@ -21,8 +21,25 @@ const DevisFormComplet = () => {
   useEffect(() => {
     const fetchClients = async () => {
       try {
+        // Récupérer d'abord le profil pour obtenir l'entreprise_id
+        const profileResponse = await axios.get("/profile");
+        const entrepriseId = profileResponse.data.id;
+        console.log("🏢 Entreprise ID connectée:", entrepriseId);
+
+        // Récupérer tous les clients et filtrer par entreprise
         const response = await axios.get("/clients");
-        setClients(response.data);
+        console.log("📋 Tous les clients:", response.data);
+
+        const clientsFiltered = response.data.filter(client =>
+          client.entreprise_id === entrepriseId
+        );
+
+        console.log("👥 Clients de l'entreprise:", clientsFiltered);
+        setClients(clientsFiltered);
+
+        if (clientsFiltered.length === 0) {
+          console.warn("⚠️ Aucun client trouvé pour cette entreprise. Vous devez d'abord créer un client.");
+        }
       } catch (err) {
         console.error("Erreur lors du chargement des clients:", err);
       }
@@ -38,14 +55,20 @@ const DevisFormComplet = () => {
 
   const handleLigneChange = (index, field, value) => {
     const updated = [...lignes];
-    updated[index][field] = field === "quantite" || field === "prix_unitaire" || field === "tva"
-      ? parseFloat(value)
-      : value;
+
+    if (field === "quantite" || field === "prix_unitaire" || field === "tva") {
+      // Gérer les valeurs vides et invalides pour éviter NaN
+      const numValue = value === '' ? 0 : parseFloat(value);
+      updated[index][field] = isNaN(numValue) ? 0 : numValue;
+    } else {
+      updated[index][field] = value;
+    }
+
     setLignes(updated);
   };
 
   const addLigne = () => {
-    setLignes([...lignes, { description: "", quantite: 1, prix_unitaire: 0, tva: 20 }]);
+    setLignes([...lignes, { description: "", quantite: 1, prix_unitaire: "", tva: 20 }]);
   };
 
   const removeLigne = (index) => {
@@ -58,20 +81,58 @@ const DevisFormComplet = () => {
     setLoading(true);
 
     try {
+      // Validation des données avant envoi
+      if (!form.objet || !form.date_devis || !form.date_expiration || !form.client_id) {
+        alert("❌ Veuillez remplir tous les champs obligatoires");
+        setLoading(false);
+        return;
+      }
+
+      if (lignes.length === 0 || lignes.some(ligne => !ligne.description || ligne.quantite <= 0 || ligne.prix_unitaire < 0)) {
+        alert("❌ Veuillez vérifier les lignes du devis (description, quantité et prix requis)");
+        setLoading(false);
+        return;
+      }
+
       // Récupération du profil pour obtenir l'entreprise_id
       const profileResponse = await axios.get("/profile");
       const entrepriseId = profileResponse.data.id;
 
+      // Formatage des dates au format RFC3339 attendu par Go
+      const dateDevis = new Date(form.date_devis + 'T00:00:00Z'); // Ajouter l'heure pour RFC3339
+      const dateExpiration = new Date(form.date_expiration + 'T23:59:59Z'); // Fin de journée
+
+      // Vérifier que les dates sont valides
+      if (isNaN(dateDevis.getTime()) || isNaN(dateExpiration.getTime())) {
+        alert("❌ Dates invalides");
+        setLoading(false);
+        return;
+      }
+
+      // Formatage des lignes pour s'assurer qu'elles sont valides
+      const lignesFormatees = lignes.map(ligne => ({
+        description: ligne.description.trim(),
+        quantite: Math.max(1, parseInt(ligne.quantite) || 1), // Au moins 1
+        prix_unitaire: Math.max(0, parseFloat(ligne.prix_unitaire) || 0), // Au moins 0
+        tva: Math.max(0, Math.min(100, parseFloat(ligne.tva) || 20)) // Entre 0 et 100, défaut 20
+      }));
+
       const data = {
-        ...form,
+        objet: form.objet.trim(),
         entreprise_id: entrepriseId,
         client_id: parseInt(form.client_id),
-        date_devis: new Date(form.date_devis).toISOString(),
-        date_expiration: new Date(form.date_expiration).toISOString(),
-        lignes,
+        date_devis: dateDevis.toISOString(), // Format RFC3339 complet
+        date_expiration: dateExpiration.toISOString(), // Format RFC3339 complet
+        conditions: form.conditions.trim() || "",
+        lignes: lignesFormatees,
+        statut: "brouillon" // Statut par défaut
       };
 
-      await axios.post("/devis", data);
+      console.log("📤 Données envoyées pour création de devis:", data);
+      console.log("📋 Lignes du devis:", lignesFormatees);
+
+      const response = await axios.post("/devis", data);
+      console.log("✅ Réponse du serveur:", response.data);
       alert("✅ Devis créé avec succès !");
 
       // Reset du formulaire
@@ -82,18 +143,38 @@ const DevisFormComplet = () => {
         conditions: "",
         client_id: "",
       });
-      setLignes([{ description: "", quantite: 1, prix_unitaire: 0, tva: 20 }]);
+      setLignes([{ description: "", quantite: 1, prix_unitaire: "", tva: 20 }]);
     } catch (err) {
-      console.error(err);
-      alert("❌ Erreur lors de la création du devis: " + (err.response?.data?.message || err.message));
+      console.error("❌ Erreur complète:", err);
+      console.error("❌ Réponse du serveur:", err.response?.data);
+      console.error("❌ Status:", err.response?.status);
+      console.error("❌ Headers:", err.response?.headers);
+
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Erreur inconnue";
+
+      alert("❌ Erreur lors de la création du devis: " + errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const calculateTotals = () => {
-    const totalHT = lignes.reduce((acc, ligne) => acc + (ligne.prix_unitaire * ligne.quantite), 0);
-    const totalTVA = lignes.reduce((acc, ligne) => acc + (ligne.prix_unitaire * ligne.quantite * ligne.tva / 100), 0);
+    const totalHT = lignes.reduce((acc, ligne) => {
+      const prix = parseFloat(ligne.prix_unitaire) || 0;
+      const qty = parseInt(ligne.quantite) || 0;
+      return acc + (prix * qty);
+    }, 0);
+
+    const totalTVA = lignes.reduce((acc, ligne) => {
+      const prix = parseFloat(ligne.prix_unitaire) || 0;
+      const qty = parseInt(ligne.quantite) || 0;
+      const tva = parseFloat(ligne.tva) || 0;
+      return acc + (prix * qty * tva / 100);
+    }, 0);
+
     const totalTTC = totalHT + totalTVA;
 
     return { totalHT, totalTVA, totalTTC };
@@ -129,12 +210,26 @@ const DevisFormComplet = () => {
               required
             >
               <option value="">-- Sélectionner un client --</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.nom} ({client.email})
+              {clients.length === 0 ? (
+                <option value="" disabled>
+                  Aucun client disponible - Créez d'abord un client
                 </option>
-              ))}
+              ) : (
+                clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.nom} ({client.email}) - ID: {client.id} - Entreprise: {client.entreprise_id}
+                  </option>
+                ))
+              )}
             </select>
+            {clients.length === 0 && (
+              <small style={{ color: 'red', marginTop: '5px', display: 'block' }}>
+                ⚠️ Aucun client trouvé pour votre entreprise.
+                <a href="/clients/ajouter" style={{ color: 'blue', textDecoration: 'underline' }}>
+                  Créer un nouveau client
+                </a>
+              </small>
+            )}
           </label>
 
           <div className="date-row">
@@ -193,7 +288,7 @@ const DevisFormComplet = () => {
                   <input
                     type="number"
                     placeholder="1"
-                    value={ligne.quantite}
+                    value={ligne.quantite === 0 ? "" : ligne.quantite}
                     onChange={(e) => handleLigneChange(index, "quantite", e.target.value)}
                     min="1"
                     step="1"
@@ -206,7 +301,7 @@ const DevisFormComplet = () => {
                   <input
                     type="number"
                     placeholder="0.00"
-                    value={ligne.prix_unitaire}
+                    value={ligne.prix_unitaire === 0 ? "" : ligne.prix_unitaire}
                     onChange={(e) => handleLigneChange(index, "prix_unitaire", e.target.value)}
                     step="0.01"
                     min="0"
@@ -219,7 +314,7 @@ const DevisFormComplet = () => {
                   <input
                     type="number"
                     placeholder="20"
-                    value={ligne.tva}
+                    value={ligne.tva === 0 ? "" : ligne.tva}
                     onChange={(e) => handleLigneChange(index, "tva", e.target.value)}
                     step="0.01"
                     min="0"
@@ -229,9 +324,9 @@ const DevisFormComplet = () => {
               </div>
 
               <div className="ligne-total">
-                <span>Total ligne HT: {(ligne.prix_unitaire * ligne.quantite).toFixed(2)} €</span>
-                <span>TVA: {(ligne.prix_unitaire * ligne.quantite * ligne.tva / 100).toFixed(2)} €</span>
-                <span>Total TTC: {(ligne.prix_unitaire * ligne.quantite * (1 + ligne.tva / 100)).toFixed(2)} €</span>
+                <span>Total ligne HT: {((parseFloat(ligne.prix_unitaire) || 0) * (parseInt(ligne.quantite) || 0)).toFixed(2)} €</span>
+                <span>TVA: {((parseFloat(ligne.prix_unitaire) || 0) * (parseInt(ligne.quantite) || 0) * (parseFloat(ligne.tva) || 0) / 100).toFixed(2)} €</span>
+                <span>Total TTC: {((parseFloat(ligne.prix_unitaire) || 0) * (parseInt(ligne.quantite) || 0) * (1 + (parseFloat(ligne.tva) || 0) / 100)).toFixed(2)} €</span>
               </div>
 
               {lignes.length > 1 && (
