@@ -28,7 +28,7 @@ func SetupRoutes() *chi.Mux {
 	r.Post("/salaries", controllers.CreateSalarie)
 
 	// Factures
-	r.Get("/factures", controllers.GetFactures)
+	r.Get("/factures", controllers.GetAllFactures)
 	r.Post("/factures", controllers.CreateFacture)
 
 	r.Route("/clients", func(r chi.Router) {

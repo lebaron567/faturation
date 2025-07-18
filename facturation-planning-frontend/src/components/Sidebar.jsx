@@ -20,7 +20,8 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
       items: [
         { path: "/devis", label: "✨ Créer un devis", icon: "➕" },
         { path: "/devis/manager", label: "📋 Gérer les devis", icon: "📋" },
-        { path: "/factures", label: "🧾 Factures", icon: "🧾" },
+        { path: "/factures/creer", label: "🧾 Créer une facture", icon: "➕" },
+        { path: "/factures", label: "📊 Gérer les factures", icon: "📊" },
         { path: "/documents", label: "📁 Documents", icon: "📁" }
       ]
     },

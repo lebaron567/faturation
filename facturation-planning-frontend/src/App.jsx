@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/Home";
 import FactureForm from "./components/FactureForm";
+import FactureManager from "./components/FactureManager";
+import FactureFormComplet from "./components/FactureFormComplet";
+import FactureDetails from "./components/FactureDetails";
 import Planning from "./components/Planning/index";
 import Login from "./components/Login";
 import Register from "./components/Register";
@@ -59,7 +62,19 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
           />
           <Route
             path="/factures"
-            element={isAuthenticated ? <FactureForm /> : <Navigate to="/login" />}
+            element={isAuthenticated ? <FactureManager /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/factures/creer"
+            element={isAuthenticated ? <FactureFormComplet /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/factures/:id"
+            element={isAuthenticated ? <FactureDetails /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/factures/:id/edit"
+            element={isAuthenticated ? <FactureFormComplet /> : <Navigate to="/login" />}
           />
           <Route
             path="/planning"

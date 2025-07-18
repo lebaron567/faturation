@@ -34,6 +34,10 @@ export const useKeyboardShortcuts = (isAuthenticated) => {
                         event.preventDefault();
                         if (isAuthenticated) navigate('/factures');
                         break;
+                    case 'n':
+                        event.preventDefault();
+                        if (isAuthenticated) navigate('/factures/creer');
+                        break;
                     case 'c':
                         event.preventDefault();
                         if (isAuthenticated) navigate('/clients/ajouter');

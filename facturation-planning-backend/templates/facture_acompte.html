@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facture {{.Reference}}</title>
+    <title>Facture d'Acompte {{.Reference}}</title>
     <style>
         * {
             margin: 0;
@@ -31,7 +31,7 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 40px;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid #e67e22;
             padding-bottom: 20px;
         }
 
@@ -42,7 +42,7 @@
         .company-name {
             font-size: 24px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #e67e22;
             margin-bottom: 10px;
         }
 
@@ -64,13 +64,27 @@
 
         .facture-title h1 {
             font-size: 28px;
-            color: #2c3e50;
+            color: #e67e22;
             margin-bottom: 10px;
         }
 
         .facture-ref {
             font-size: 14px;
             color: #666;
+        }
+
+        .acompte-warning {
+            background: #fff3cd;
+            border: 2px solid #e67e22;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .acompte-warning h3 {
+            color: #e67e22;
+            margin-bottom: 5px;
         }
 
         .facture-info {
@@ -94,7 +108,7 @@
         .info-title {
             font-weight: bold;
             font-size: 14px;
-            color: #2c3e50;
+            color: #e67e22;
             margin-bottom: 10px;
         }
 
@@ -109,7 +123,7 @@
         }
 
         .prestations-table th {
-            background: #2c3e50;
+            background: #e67e22;
             color: white;
             padding: 12px 8px;
             text-align: left;
@@ -162,7 +176,7 @@
         }
 
         .total-final {
-            background: #2c3e50;
+            background: #e67e22;
             color: white;
             font-size: 14px;
         }
@@ -170,12 +184,13 @@
         .conditions {
             margin-top: 40px;
             padding: 20px;
-            background: #f8f9fa;
+            background: #fff3cd;
             border-radius: 5px;
+            border-left: 4px solid #e67e22;
         }
 
         .conditions h3 {
-            color: #2c3e50;
+            color: #e67e22;
             margin-bottom: 10px;
         }
 
@@ -243,8 +258,14 @@
 
         <!-- Titre de la facture -->
         <div class="facture-title">
-            <h1>FACTURE</h1>
+            <h1>FACTURE D'ACOMPTE</h1>
             <div class="facture-ref">N° {{.Reference}}</div>
+        </div>
+
+        <!-- Avertissement acompte -->
+        <div class="acompte-warning">
+            <h3>⚠️ FACTURE D'ACOMPTE ⚠️</h3>
+            <p>Cette facture constitue un acompte sur la prestation finale</p>
         </div>
 
         <!-- Informations client et facture -->
@@ -265,7 +286,10 @@
                     <strong>Date d'échéance :</strong> {{.DateEcheance}}<br>
                     <strong>Type :</strong> {{.TypeFacture}}<br>
                     <strong>Statut :</strong>
-                    <span class="statut-badge statut-{{.Statut}}">{{.Statut}}</span>
+                    <span class="statut-badge statut-{{.Statut}}">{{.Statut}}</span><br>
+                    {{if .DevisReference}}
+                    <strong>Devis associé :</strong> {{.DevisReference}}
+                    {{end}}
                 </div>
             </div>
         </div>
@@ -283,15 +307,17 @@
             <table class="prestations-table">
                 <thead>
                     <tr>
-                        <th style="width: 60%">Désignation</th>
-                        <th style="width: 20%" class="text-right">Montant HT</th>
+                        <th style="width: 50%">Désignation</th>
+                        <th style="width: 15%" class="text-right">% Acompte</th>
+                        <th style="width: 15%" class="text-right">Montant HT</th>
                         <th style="width: 10%" class="text-right">TVA</th>
-                        <th style="width: 20%" class="text-right">Montant TTC</th>
+                        <th style="width: 15%" class="text-right">Montant TTC</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{{.Description}}</td>
+                        <td>Acompte - {{.Description}}</td>
+                        <td class="text-right">{{if .PourcentageAcompte}}{{.PourcentageAcompte}}%{{else}}50%{{end}}</td>
                         <td class="text-right">{{formatPrice .SousTotalHT}}</td>
                         <td class="text-right">{{formatPrice .TotalTVA}}</td>
                         <td class="text-right">{{formatPrice .TotalTTC}}</td>
@@ -312,22 +338,28 @@
                     <td class="total-amount">{{formatPrice .TotalTVA}}</td>
                 </tr>
                 <tr class="total-final">
-                    <td class="total-label">Total TTC :</td>
+                    <td class="total-label">Acompte à régler :</td>
                     <td class="total-amount">{{formatPrice .TotalTTC}}</td>
                 </tr>
             </table>
         </div>
 
-        <!-- Conditions de paiement -->
+        <!-- Conditions de paiement spécifiques aux acomptes -->
         <div class="conditions">
-            <h3>Conditions de paiement</h3>
-            <p>Paiement par virement bancaire sous 30 jours. Toute facture non réglée dans les délais impartis fera
-                l'objet d'une pénalité de retard égale à 3 fois le taux d'intérêt légal en vigueur.</p>
+            <h3>Conditions de paiement - Acompte</h3>
+            <p><strong>Cet acompte est exigible dès réception de cette facture.</strong></p>
+            <p>Le solde sera facturé à la livraison/finalisation de la prestation.</p>
+            <p>Paiement par virement bancaire. Toute facture non réglée dans les délais impartis fera l'objet d'une
+                pénalité de retard égale à 3 fois le taux d'intérêt légal en vigueur.</p>
 
             <div style="margin-top: 15px;">
                 <strong>Coordonnées bancaires :</strong><br>
                 IBAN : {{.Company.IBAN}}<br>
                 BIC : {{.Company.BIC}}
+            </div>
+
+            <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                <strong>Important :</strong> Cet acompte sera déduit du montant total lors de la facturation finale.
             </div>
         </div>
 
