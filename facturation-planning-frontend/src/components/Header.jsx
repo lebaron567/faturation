@@ -1,15 +1,16 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import "../styles/Header.css";
 
-const Header = ({ isAuthenticated, setIsAuthenticated, toggleSidebar }) => {
+const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
+    logout();
     navigate("/login");
   };
 

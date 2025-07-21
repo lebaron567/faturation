@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthErrorHandler from "./components/AuthErrorHandler";
 import Home from "./components/Home";
 import FactureForm from "./components/FactureForm";
 import FactureManager from "./components/FactureManager";
@@ -18,12 +21,14 @@ import ListeDevis from "./components/ListeDevis";
 import DevisDetails from "./components/DevisDetails";
 import DevisManager from "./components/DevisManager";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useAuth } from "./contexts/AuthContext";
 
 import "./App.css";
 
 // Composant wrapper pour utiliser les hooks à l'intérieur du Router
-function AppContent({ isAuthenticated, setIsAuthenticated }) {
+function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // Intégrer les raccourcis clavier (maintenant à l'intérieur du Router)
   useKeyboardShortcuts(isAuthenticated);
@@ -36,61 +41,116 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
       />
       <div className="main-content">
         <Header
-          isAuthenticated={isAuthenticated}
-          setIsAuthenticated={setIsAuthenticated}
           toggleSidebar={() => setSidebarCollapsed(prev => !prev)}
         />
         <Routes>
-          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/clients/ajouter" element={<AjouterClient />} />
+
+          {/* Routes protégées */}
+          <Route
+            path="/clients/ajouter"
+            element={
+              <ProtectedRoute>
+                <AjouterClient />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/devis"
-            element={isAuthenticated ? <DevisFormComplet /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <DevisFormComplet />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/devis/manager"
-            element={isAuthenticated ? <DevisManager /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <DevisManager />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/devis/:id"
-            element={isAuthenticated ? <DevisDetails /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <DevisDetails />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/liste-devis"
-            element={isAuthenticated ? <ListeDevis /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <ListeDevis />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/factures"
-            element={isAuthenticated ? <FactureManager /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <FactureManager />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/factures/creer"
-            element={isAuthenticated ? <FactureFormComplet /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <FactureFormComplet />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/factures/:id"
-            element={isAuthenticated ? <FactureDetails /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <FactureDetails />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/factures/:id/edit"
-            element={isAuthenticated ? <FactureFormComplet /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <FactureFormComplet />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/planning"
-            element={isAuthenticated ? <Planning /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <Planning />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/salarie/ajouter"
-            element={isAuthenticated ? <AddSalarie /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <AddSalarie />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/documents"
-            element={isAuthenticated ? <GestionDocuments /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <GestionDocuments />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/"
-            element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </div>
@@ -99,19 +159,12 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
-
-  useEffect(() => {
-    setIsAuthenticated(!!localStorage.getItem("token"));
-  }, []);
-
   return (
-    <Router>
-      <AppContent
-        isAuthenticated={isAuthenticated}
-        setIsAuthenticated={setIsAuthenticated}
-      />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   );
 }
 

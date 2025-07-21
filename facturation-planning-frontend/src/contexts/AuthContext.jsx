@@ -19,16 +19,16 @@ export const AuthProvider = ({ children }) => {
     // Vérifier la validité du token
     const isTokenValid = (token) => {
         if (!token) return false;
-        
+
         try {
             const decoded = jwtDecode(token);
             const currentTime = Date.now() / 1000;
-            
+
             // Vérifier si le token n'est pas expiré
             if (decoded.exp && decoded.exp < currentTime) {
                 return false;
             }
-            
+
             return true;
         } catch (error) {
             console.error('Erreur lors du décodage du token:', error);
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
     // Vérifier l'authentification au chargement de l'app
     const checkAuth = () => {
         const token = localStorage.getItem('token');
-        
+
         if (isTokenValid(token)) {
             try {
                 const decoded = jwtDecode(token);
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
         } else {
             logout();
         }
-        
+
         setLoading(false);
     };
 

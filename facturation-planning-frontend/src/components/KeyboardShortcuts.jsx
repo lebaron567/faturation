@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/KeyboardShortcuts.css';
 
-const KeyboardShortcuts = ({ isAuthenticated }) => {
+const KeyboardShortcuts = () => {
     const [isVisible, setIsVisible] = useState(false);
+    const { isAuthenticated } = useAuth();
     const { shortcuts } = useKeyboardShortcuts(isAuthenticated);
 
     const toggleVisibility = () => {

@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import axios from "../axiosInstance";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import "../styles/Login.css";
 
-const Login = ({ setIsAuthenticated }) => {
+const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  // Récupérer l'URL de redirection depuis les paramètres ou le state
+  const from = location.state?.from?.pathname || new URLSearchParams(location.search).get('redirect') || '/';
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -13,19 +20,27 @@ const Login = ({ setIsAuthenticated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
       const response = await axios.post("http://localhost:8080/login", form);
 
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        setIsAuthenticated(true);
-        navigate("/");
+        const success = login(response.data.token, response.data.user);
+
+        if (success) {
+          navigate(from, { replace: true });
+        } else {
+          alert("⚠️ Token invalide !");
+        }
       } else {
         alert("⚠️ Aucun token reçu !");
       }
     } catch (error) {
       console.error("❌ Erreur de connexion :", error.response?.data || error.message);
       alert("❌ Connexion échouée !");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,7 +62,9 @@ const Login = ({ setIsAuthenticated }) => {
           onChange={handleChange}
           required
         />
-        <button type="submit">🔐 Se connecter</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "🔄 Connexion..." : "🔐 Se connecter"}
+        </button>
       </form>
 
       <p className="register-message">Pas encore de compte ?</p>
