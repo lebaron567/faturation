@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
@@ -48,14 +48,14 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Fonction de déconnexion
-    const logout = () => {
+    const logout = useCallback(() => {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setUser(null);
-    };
+    }, []);
 
     // Vérifier l'authentification au chargement de l'app
-    const checkAuth = () => {
+    const checkAuth = useCallback(() => {
         const token = localStorage.getItem('token');
 
         if (isTokenValid(token)) {
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         setLoading(false);
-    };
+    }, [logout]);
 
     // Vérifier périodiquement la validité du token
     useEffect(() => {
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
         }, 60000); // 1 minute
 
         return () => clearInterval(interval);
-    }, []);
+    }, [logout]); // Ajout de logout dans les dépendances
 
     // Intercepter les erreurs d'autorisation
     useEffect(() => {
@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }) => {
 
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+    }, [logout, checkAuth]); // Ajout des dépendances
 
     const value = {
         isAuthenticated,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthErrorHandler from "./components/AuthErrorHandler";
@@ -29,17 +29,23 @@ import "./App.css";
 function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
 
   // Intégrer les raccourcis clavier (maintenant à l'intérieur du Router)
   useKeyboardShortcuts(isAuthenticated);
 
+  // Déterminer si nous sommes sur la page de planning
+  const isPlanningPage = location.pathname === '/planning';
+
   return (
-    <div className={`app-layout ${sidebarCollapsed ? "collapsed" : ""}`}>
+    <div className={`app-layout ${sidebarCollapsed ? "collapsed" : ""} ${isPlanningPage ? "planning-layout" : ""}`}>
+      <AuthErrorHandler />
       <Sidebar
         collapsed={sidebarCollapsed}
         toggleSidebar={() => setSidebarCollapsed(prev => !prev)}
+        isPlanningPage={isPlanningPage}
       />
-      <div className="main-content">
+      <div className={`main-content ${isPlanningPage ? 'planning-page' : ''}`}>
         <Header
           toggleSidebar={() => setSidebarCollapsed(prev => !prev)}
         />

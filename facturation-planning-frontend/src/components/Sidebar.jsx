@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import "../styles/Sidebar.css";
 
-const Sidebar = ({ collapsed, toggleSidebar }) => {
+const Sidebar = ({ collapsed, toggleSidebar, isPlanningPage }) => {
   const location = useLocation();
 
   if (collapsed) return null;
@@ -11,25 +11,25 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
     {
       section: "🏠 Tableau de bord",
       items: [
-        { path: "/", label: "📊 Accueil", icon: "🏠" },
-        { path: "/planning", label: "📅 Planning", icon: "📅" }
+        { path: "/", label: " Accueil", icon: "🏠" },
+        { path: "/planning", label: " Planning", icon: "📅" }
       ]
     },
     {
       section: "💼 Gestion commerciale",
       items: [
-        { path: "/devis", label: "✨ Créer un devis", icon: "➕" },
-        { path: "/devis/manager", label: "📋 Gérer les devis", icon: "📋" },
-        { path: "/factures/creer", label: "🧾 Créer une facture", icon: "➕" },
-        { path: "/factures", label: "📊 Gérer les factures", icon: "📊" },
-        { path: "/documents", label: "📁 Documents", icon: "📁" }
+        { path: "/devis", label: " Créer un devis", icon: "➕" },
+        { path: "/devis/manager", label: " Gérer les devis", icon: "📋" },
+        { path: "/factures/creer", label: " Créer une facture", icon: "➕" },
+        { path: "/factures", label: " Gérer les factures", icon: "📊" },
+        { path: "/documents", label: " Documents", icon: "📁" }
       ]
     },
     {
       section: "👥 Contacts",
       items: [
-        { path: "/clients/ajouter", label: "👤 Nouveau client", icon: "👤" },
-        { path: "/salarie/ajouter", label: "🤝 Nouveau salarié", icon: "🤝" }
+        { path: "/clients/ajouter", label: " Nouveau client", icon: "👤" },
+        { path: "/salarie/ajouter", label: " Nouveau salarié", icon: "🤝" }
       ]
     }
   ];
@@ -41,14 +41,12 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
   };
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isPlanningPage ? 'sidebar-planning' : ''}`}>
       <div className="sidebar-header">
         <button className="retract-button" onClick={toggleSidebar} title="Réduire le menu">
           ⬅️
         </button>
         <div className="sidebar-brand">
-          <span className="brand-icon">💼</span>
-          <span className="brand-text">Facturation</span>
         </div>
       </div>
 

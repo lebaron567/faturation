@@ -16,7 +16,8 @@ header {
   /* Empêche la compression du header */
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 2000;
+  /* Augmenté pour passer au-dessus du planning */
   padding: 0 20px;
   /* Padding horizontal seulement */
   box-sizing: border-box;
@@ -164,6 +165,16 @@ header button:first-child {
   background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.quick-action-btn.primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  font-weight: 600;
+}
+
+.quick-action-btn.primary:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .user-actions {

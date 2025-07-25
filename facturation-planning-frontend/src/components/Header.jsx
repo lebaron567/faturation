@@ -7,7 +7,7 @@ import "../styles/Header.css";
 const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -85,20 +85,50 @@ const Header = ({ toggleSidebar }) => {
         {isAuthenticated && (
           <>
             <div className="quick-actions">
-              <button
-                onClick={() => navigate('/devis')}
-                title="Créer un devis rapidement (Ctrl+D)"
-                className="quick-action-btn"
-              >
-                ✨ Devis
-              </button>
-              <button
-                onClick={() => navigate('/planning')}
-                title="Aller au planning (Ctrl+P)"
-                className="quick-action-btn"
-              >
-                📅 Planning
-              </button>
+              {location.pathname === '/planning' ? (
+                // Actions spécifiques au planning
+                <>
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('planning:newEvent'))}
+                    title="Ajouter un planning"
+                    className="quick-action-btn primary"
+                  >
+                    ➕ Ajouter
+                  </button>
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('planning:export'))}
+                    title="Exporter le planning"
+                    className="quick-action-btn"
+                  >
+                    📤 Exporter
+                  </button>
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('planning:refresh'))}
+                    title="Actualiser le planning"
+                    className="quick-action-btn"
+                  >
+                    🔄 Actualiser
+                  </button>
+                </>
+              ) : (
+                // Actions générales
+                <>
+                  <button
+                    onClick={() => navigate('/devis')}
+                    title="Créer un devis rapidement (Ctrl+D)"
+                    className="quick-action-btn"
+                  >
+                    ✨ Devis
+                  </button>
+                  <button
+                    onClick={() => navigate('/planning')}
+                    title="Aller au planning (Ctrl+P)"
+                    className="quick-action-btn"
+                  >
+                    📅 Planning
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="user-actions">
