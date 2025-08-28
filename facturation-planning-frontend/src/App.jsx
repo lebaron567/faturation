@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthErrorHandler from "./components/AuthErrorHandler";
 import Home from "./components/Home";
-import FactureForm from "./components/FactureForm";
 import FactureManager from "./components/FactureManager";
 import FactureFormComplet from "./components/FactureFormComplet";
 import FactureDetails from "./components/FactureDetails";

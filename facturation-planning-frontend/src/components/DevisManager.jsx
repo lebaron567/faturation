@@ -32,7 +32,8 @@ const DevisManager = () => {
             ]);
 
             console.log("📝 Devis récupérés:", devisResponse.data);
-            console.log("👥 Clients récupérés:", clientsResponse.data);
+            console.log("� Structure du premier devis:", devisResponse.data[0]);
+            console.log("�👥 Clients récupérés:", clientsResponse.data);
 
             setDevisList(devisResponse.data || []);
             setClients(clientsResponse.data || []);
@@ -51,7 +52,7 @@ const DevisManager = () => {
 
             // Mettre à jour la liste locale
             setDevisList(prev => prev.map(devis =>
-                devis.ID === devisId ? { ...devis, statut: newStatut } : devis
+                devis.id === devisId ? { ...devis, statut: newStatut } : devis
             ));
 
             alert(`✅ Statut mis à jour vers "${newStatut}"`);
@@ -68,7 +69,7 @@ const DevisManager = () => {
 
         try {
             await axios.delete(`/devis/${devisId}`);
-            setDevisList(prev => prev.filter(devis => devis.ID !== devisId));
+            setDevisList(prev => prev.filter(devis => devis.id !== devisId));
             alert("🗑️ Devis supprimé avec succès");
         } catch (err) {
             console.error("❌ Erreur suppression:", err);
@@ -77,13 +78,23 @@ const DevisManager = () => {
     };
 
     const generatePDF = async (devisId, download = false) => {
+        if (!devisId || devisId === 'undefined') {
+            console.error("❌ ID devis invalide:", devisId);
+            alert("❌ Erreur: ID du devis invalide");
+            return;
+        }
+
         try {
             const endpoint = download ? `download` : `pdf`;
+            console.log(`📄 Génération PDF via API backend pour devis ${devisId}, endpoint: ${endpoint}`);
+
             const response = await axios.get(`/devis/${devisId}/${endpoint}`, {
                 responseType: 'blob'
             });
 
             const blob = new Blob([response.data], { type: 'application/pdf' });
+            console.log(`📄 PDF reçu du backend, taille: ${blob.size} bytes`);
+
             const url = window.URL.createObjectURL(blob);
 
             if (download) {
@@ -94,15 +105,20 @@ const DevisManager = () => {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                console.log("📄 PDF téléchargé avec succès");
             } else {
                 // Affichage dans un nouvel onglet
                 window.open(url, '_blank');
+                console.log("📄 PDF ouvert dans un nouvel onglet");
             }
 
-            window.URL.revokeObjectURL(url);
+            // Nettoyer l'URL après un délai
+            setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+
         } catch (err) {
             console.error("❌ Erreur génération PDF:", err);
-            alert("Erreur lors de la génération du PDF");
+            console.error("❌ Détails de l'erreur:", err.response?.data || err.message);
+            alert(`❌ Erreur lors de la génération du PDF: ${err.response?.status || err.message}`);
         }
     };
 
@@ -287,15 +303,15 @@ const DevisManager = () => {
                             </thead>
                             <tbody>
                                 {filteredDevis.map((devis) => (
-                                    <tr key={devis.ID} style={{ borderBottom: '1px solid #f8f9fa' }}>
-                                        <td style={{ padding: '1rem' }}>#{devis.ID}</td>
+                                    <tr key={devis.id} style={{ borderBottom: '1px solid #f8f9fa' }}>
+                                        <td style={{ padding: '1rem' }}>#{devis.id}</td>
                                         <td style={{ padding: '1rem' }}>{devis.objet || "Sans objet"}</td>
                                         <td style={{ padding: '1rem' }}>{devis.Client?.nom || "Client inconnu"}</td>
                                         <td style={{ padding: '1rem' }}>{formatDate(devis.date_devis)}</td>
                                         <td style={{ padding: '1rem' }}>
                                             <select
                                                 value={devis.statut || 'brouillon'}
-                                                onChange={(e) => updateDevisStatut(devis.ID, e.target.value)}
+                                                onChange={(e) => updateDevisStatut(devis.id, e.target.value)}
                                                 style={{
                                                     padding: '0.25rem 0.5rem',
                                                     borderRadius: '4px',
@@ -317,49 +333,69 @@ const DevisManager = () => {
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                                <Link
-                                                    to={`/devis/${devis.ID}`}
-                                                    style={{
-                                                        padding: '0.25rem 0.5rem',
-                                                        backgroundColor: '#007bff',
-                                                        color: 'white',
-                                                        textDecoration: 'none',
-                                                        borderRadius: '3px',
-                                                        fontSize: '0.8rem'
-                                                    }}
-                                                >
-                                                    👁️ Voir
-                                                </Link>
+                                                {devis.id ? (
+                                                    <Link
+                                                        to={`/devis/${devis.id}`}
+                                                        style={{
+                                                            padding: '0.25rem 0.5rem',
+                                                            backgroundColor: '#007bff',
+                                                            color: 'white',
+                                                            textDecoration: 'none',
+                                                            borderRadius: '3px',
+                                                            fontSize: '0.8rem'
+                                                        }}
+                                                    >
+                                                        👁️ Voir
+                                                    </Link>
+                                                ) : (
+                                                    <span
+                                                        style={{
+                                                            padding: '0.25rem 0.5rem',
+                                                            backgroundColor: '#6c757d',
+                                                            color: 'white',
+                                                            textDecoration: 'none',
+                                                            borderRadius: '3px',
+                                                            fontSize: '0.8rem'
+                                                        }}
+                                                        title="ID manquant"
+                                                    >
+                                                        👁️ Voir
+                                                    </span>
+                                                )}
                                                 <button
-                                                    onClick={() => generatePDF(devis.ID, false)}
+                                                    onClick={() => devis.id && generatePDF(devis.id, false)}
+                                                    disabled={!devis.id}
                                                     style={{
                                                         padding: '0.25rem 0.5rem',
-                                                        backgroundColor: '#28a745',
+                                                        backgroundColor: devis.id ? '#28a745' : '#6c757d',
                                                         color: 'white',
                                                         border: 'none',
                                                         borderRadius: '3px',
                                                         fontSize: '0.8rem',
-                                                        cursor: 'pointer'
+                                                        cursor: devis.id ? 'pointer' : 'not-allowed'
                                                     }}
+                                                    title={devis.id ? 'Voir le PDF' : 'ID manquant'}
                                                 >
                                                     📄 PDF
                                                 </button>
                                                 <button
-                                                    onClick={() => generatePDF(devis.ID, true)}
+                                                    onClick={() => devis.id && generatePDF(devis.id, true)}
+                                                    disabled={!devis.id}
                                                     style={{
                                                         padding: '0.25rem 0.5rem',
-                                                        backgroundColor: '#17a2b8',
+                                                        backgroundColor: devis.id ? '#17a2b8' : '#6c757d',
                                                         color: 'white',
                                                         border: 'none',
                                                         borderRadius: '3px',
                                                         fontSize: '0.8rem',
-                                                        cursor: 'pointer'
+                                                        cursor: devis.id ? 'pointer' : 'not-allowed'
                                                     }}
+                                                    title={devis.id ? 'Télécharger le PDF' : 'ID manquant'}
                                                 >
                                                     ⬇️ DL
                                                 </button>
                                                 <button
-                                                    onClick={() => deleteDevis(devis.ID)}
+                                                    onClick={() => deleteDevis(devis.id)}
                                                     style={{
                                                         padding: '0.25rem 0.5rem',
                                                         backgroundColor: '#dc3545',

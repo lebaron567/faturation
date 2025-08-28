@@ -21,6 +21,8 @@ type Devis struct {
 	Conditions     string       `json:"conditions" example:"Paiement sous 30 jours"`
 	Objet          string       `json:"objet" example:"Développement application web"`
 	Statut         string       `json:"statut" example:"brouillon" gorm:"default:brouillon"` // brouillon, envoyé, accepté, refusé
+	LieuSignature  string       `json:"lieu_signature" example:"Paris"`
+	DateSignature  string       `json:"date_signature" example:"10/06/2025"`
 	Lignes         []LigneDevis `json:"lignes"`
 
 	// Relations

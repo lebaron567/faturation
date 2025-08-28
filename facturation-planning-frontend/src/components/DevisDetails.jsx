@@ -51,13 +51,15 @@ const DevisDetails = () => {
   const generatePDF = async (download = false) => {
     try {
       const endpoint = download ? 'download' : 'pdf';
-      console.log(`📄 Génération PDF (${endpoint}) pour devis ${id}`);
+      console.log(`📄 Génération PDF via API backend pour devis ${id}, endpoint: ${endpoint}`);
 
       const response = await axios.get(`/devis/${id}/${endpoint}`, {
         responseType: 'blob',
       });
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
+      console.log(`📄 PDF reçu du backend, taille: ${blob.size} bytes`);
+
       const url = window.URL.createObjectURL(blob);
 
       if (download) {
@@ -68,15 +70,20 @@ const DevisDetails = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        console.log("📄 PDF téléchargé avec succès");
       } else {
         // Affichage dans un nouvel onglet
         window.open(url, '_blank');
+        console.log("📄 PDF ouvert dans un nouvel onglet");
       }
 
-      window.URL.revokeObjectURL(url);
+      // Nettoyer l'URL après un délai
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+
     } catch (err) {
       console.error("❌ Erreur génération PDF:", err);
-      alert("❌ Erreur lors de la génération du PDF");
+      console.error("❌ Détails de l'erreur:", err.response?.data || err.message);
+      alert(`❌ Erreur lors de la génération du PDF: ${err.response?.status || err.message}`);
     }
   };
 
@@ -149,7 +156,7 @@ const DevisDetails = () => {
             ← Retour
           </button>
           <div>
-            <h2>📝 Devis #{devis.ID}</h2>
+            <h2>📝 Devis #{devis.id}</h2>
             <p className="devis-subtitle">{devis.objet || "Sans objet"}</p>
           </div>
         </div>
@@ -195,7 +202,7 @@ const DevisDetails = () => {
             <h3>📄 Informations du devis</h3>
             <div className="info-row">
               <span className="label">Référence:</span>
-              <span className="value">DEVIS-{String(devis.ID).padStart(4, '0')}</span>
+              <span className="value">DEVIS-{String(devis.id).padStart(4, '0')}</span>
             </div>
             <div className="info-row">
               <span className="label">Date de création:</span>
@@ -225,23 +232,23 @@ const DevisDetails = () => {
           {/* Informations client */}
           <div className="info-section">
             <h3>👤 Client</h3>
-            {devis.Client ? (
+            {devis.client ? (
               <>
                 <div className="info-row">
                   <span className="label">Nom:</span>
-                  <span className="value">{devis.Client.nom}</span>
+                  <span className="value">{devis.client.nom}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>
-                  <span className="value">{devis.Client.email}</span>
+                  <span className="value">{devis.client.email}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Téléphone:</span>
-                  <span className="value">{devis.Client.telephone || "Non renseigné"}</span>
+                  <span className="value">{devis.client.telephone || "Non renseigné"}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Adresse:</span>
-                  <span className="value">{devis.Client.adresse || "Non renseignée"}</span>
+                  <span className="value">{devis.client.adresse || "Non renseignée"}</span>
                 </div>
               </>
             ) : (
@@ -252,19 +259,19 @@ const DevisDetails = () => {
           {/* Informations entreprise */}
           <div className="info-section">
             <h3>🏢 Entreprise</h3>
-            {devis.Entreprise ? (
+            {devis.entreprise ? (
               <>
                 <div className="info-row">
                   <span className="label">Nom:</span>
-                  <span className="value">{devis.Entreprise.nom}</span>
+                  <span className="value">{devis.entreprise.nom}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>
-                  <span className="value">{devis.Entreprise.email}</span>
+                  <span className="value">{devis.entreprise.email || "Non renseigné"}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Téléphone:</span>
-                  <span className="value">{devis.Entreprise.telephone || "Non renseigné"}</span>
+                  <span className="value">{devis.entreprise.telephone || "Non renseigné"}</span>
                 </div>
               </>
             ) : (
