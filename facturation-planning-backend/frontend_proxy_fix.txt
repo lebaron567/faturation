@@ -1,0 +1,26 @@
+# Solutions pour fixer le proxy frontend -> backend WSL
+
+## Solution 1: Modifier package.json du frontend
+Au lieu de:
+"proxy": "http://localhost:8080"
+
+Utilisez:
+"proxy": "http://172.22.140.106:8080"
+
+## Solution 2: Modifier vite.config.js ou webpack (si applicable)
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://172.22.140.106:8080',
+      changeOrigin: true,
+    }
+  }
+}
+
+## Solution 3: Variables d'environnement (.env du frontend)
+REACT_APP_API_URL=http://172.22.140.106:8080
+VITE_API_URL=http://172.22.140.106:8080
+
+## Solution 4: Lancer le backend depuis Windows (recommandé)
+1. Installer PostgreSQL sur Windows
+2. Lancer le serveur Go depuis Windows sur localhost:8080

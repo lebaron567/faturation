@@ -1,29 +1,16 @@
 import axios from "../axiosInstance";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useEntreprise } from "../hooks/useEntreprise";
 import "../styles/AjouterClient.css";
 
 const AjouterClient = () => {
+  const { entrepriseId, checkEntrepriseAccess } = useEntreprise();
   const [form, setForm] = useState({
     nom: "",
     email: "",
     telephone: "",
     adresse: "",
   });
-
-  const [entrepriseId, setEntrepriseId] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await axios.get("/profile");
-        setEntrepriseId(res.data.id);
-      } catch (err) {
-        console.error("Erreur récupération profil :", err);
-      }
-    };
-
-    fetchProfile();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,21 +20,27 @@ const AjouterClient = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!entrepriseId) {
-      alert("⚠️ Impossible d'ajouter un client sans entreprise liée.");
+    if (!checkEntrepriseAccess("ajouter un client")) {
       return;
     }
 
+    console.log("🏢 Ajout client pour entreprise:", entrepriseId);
+
     try {
-      await axios.post("/clients", {
+      const clientData = {
         ...form,
         entreprise_id: entrepriseId,
-      });
+      };
+
+      console.log("📝 Données client à envoyer:", clientData);
+
+      await axios.post("/clients", clientData);
       alert("✅ Client ajouté !");
       setForm({ nom: "", email: "", telephone: "", adresse: "" });
     } catch (err) {
-      console.error("Erreur ajout client :", err);
-      alert("❌ Échec de l'ajout du client.");
+      console.error("❌ Erreur ajout client:", err);
+      console.error("❌ Response data:", err.response?.data);
+      alert(`❌ Échec de l'ajout du client: ${err.response?.data?.message || err.message}`);
     }
   };
 

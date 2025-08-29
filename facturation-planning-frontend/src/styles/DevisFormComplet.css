@@ -1,10 +1,35 @@
+/* ==================== DISPOSITION AVEC APERÇU ==================== */
+.devis-form-with-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.form-container {
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+.preview-container {
+  position: sticky;
+  top: 0;
+  height: fit-content;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+/* Ajustements pour la nouvelle disposition */
 .devis-form {
   width: 100%;
-  min-height: calc(100vh - 60px);
-  /* Prendre toute la hauteur disponible */
+  min-height: auto;
   margin: 0;
-  padding: 2rem 3rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 0;
+  background: transparent;
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -207,9 +232,26 @@
 }
 
 @media (max-width: 768px) {
+  .devis-form-with-preview {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 16px;
+  }
+
+  .preview-container {
+    position: static;
+    max-height: 400px;
+    order: -1;
+    /* Montre l'aperçu en haut sur mobile */
+  }
+
+  .form-container {
+    padding-right: 0;
+  }
+
   .devis-form {
-    margin: 1rem;
-    padding: 1rem;
+    margin: 0;
+    padding: 0;
   }
 
   .date-row,

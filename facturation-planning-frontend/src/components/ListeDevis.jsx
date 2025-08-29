@@ -12,11 +12,24 @@ const ListeDevis = () => {
     const fetchDevis = async () => {
       try {
         setLoading(true);
+        console.log("🔍 Tentative de récupération des devis...");
+
+        // Vérifier que le token est valide avant la requête
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error("❌ Aucun token trouvé");
+          alert("Veuillez vous reconnecter");
+          return;
+        }
+
         const response = await axios.get("/devis");
+        console.log("✅ Devis récupérés avec succès:", response.data);
         setDevisList(response.data);
       } catch (err) {
-        console.error(err);
-        alert("❌ Impossible de récupérer les devis");
+        console.error("❌ Erreur détaillée:", err);
+        console.error("❌ Response data:", err.response?.data);
+        console.error("❌ Status:", err.response?.status);
+        alert(`❌ Impossible de récupérer les devis: ${err.response?.data?.message || err.message}`);
       } finally {
         setLoading(false);
       }
@@ -30,7 +43,7 @@ const ListeDevis = () => {
       await axios.patch(`/devis/${devisId}/statut`, { statut: newStatus });
       setDevisList(prev =>
         prev.map(devis =>
-          devis.ID === devisId ? { ...devis, statut: newStatus } : devis
+          devis.id === devisId ? { ...devis, statut: newStatus } : devis
         )
       );
     } catch (err) {
@@ -43,7 +56,7 @@ const ListeDevis = () => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce devis ?")) {
       try {
         await axios.delete(`/devis/${devisId}`);
-        setDevisList(prev => prev.filter(devis => devis.ID !== devisId));
+        setDevisList(prev => prev.filter(devis => devis.id !== devisId));
       } catch (err) {
         console.error(err);
         alert("❌ Erreur lors de la suppression");
@@ -108,7 +121,7 @@ const ListeDevis = () => {
       ) : (
         <ul className="devis-cards">
           {filteredDevis.map((devis) => (
-            <li key={devis.ID} className="devis-card">
+            <li key={devis.id} className="devis-card">
               <div className="devis-header">
                 <h3>{devis.objet || "Devis sans objet"}</h3>
                 <span
@@ -134,7 +147,7 @@ const ListeDevis = () => {
 
               <div className="devis-actions">
                 <Link
-                  to={`/devis/${devis.ID}`}
+                  to={`/devis/${devis.id}`}
                   className="action-btn view-btn"
                 >
                   👁️ Voir
@@ -142,7 +155,7 @@ const ListeDevis = () => {
 
                 <select
                   value={devis.statut || 'brouillon'}
-                  onChange={(e) => handleStatusChange(devis.ID, e.target.value)}
+                  onChange={(e) => handleStatusChange(devis.id, e.target.value)}
                   className="status-select"
                 >
                   <option value="brouillon">Brouillon</option>
@@ -153,14 +166,14 @@ const ListeDevis = () => {
                 </select>
 
                 <button
-                  onClick={() => downloadPDF(devis.ID)}
+                  onClick={() => downloadPDF(devis.id)}
                   className="action-btn download-btn"
                 >
                   📥 PDF
                 </button>
 
                 <button
-                  onClick={() => handleDelete(devis.ID)}
+                  onClick={() => handleDelete(devis.id)}
                   className="action-btn delete-btn"
                 >
                   🗑️

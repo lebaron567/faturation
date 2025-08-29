@@ -9,6 +9,7 @@ import (
 func FactureRoutes(r *chi.Mux) {
 	// CRUD operations
 	r.Post("/factures", controllers.CreateFacture)
+	r.Post("/factures/from-devis/{devisId}", controllers.CreateFactureFromDevis)
 	r.Get("/factures", controllers.GetAllFactures)
 	r.Get("/factures/{id}", controllers.GetFactureByID)
 	r.Put("/factures/{id}", controllers.UpdateFacture)

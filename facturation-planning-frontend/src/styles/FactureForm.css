@@ -1,9 +1,35 @@
+/* ==================== DISPOSITION AVEC APERÇU ==================== */
+.facture-form-with-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.form-container {
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+.preview-container {
+  position: sticky;
+  top: 0;
+  height: fit-content;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+/* Ajustements pour la nouvelle disposition */
 .facture-form {
   width: 100%;
-  min-height: calc(100vh - 60px);
+  min-height: auto;
   margin: 0;
-  padding: 2rem 3rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 0;
+  background: transparent;
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

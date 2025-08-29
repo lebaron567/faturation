@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facture {{.Reference}}</title>
     <style>
         * {
@@ -11,234 +9,126 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Arial', sans-serif;
             font-size: 12px;
             line-height: 1.4;
-            color: #333;
+            color: #000;
             background: white;
         }
-
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
-
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 40px;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid #000;
             padding-bottom: 20px;
         }
-
-        .company-info {
-            flex: 1;
-        }
-
+        .company-info { flex: 1; }
         .company-name {
             font-size: 24px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #000;
             margin-bottom: 10px;
         }
-
         .company-details {
             font-size: 11px;
             line-height: 1.3;
-            color: #666;
+            color: #000;
         }
-
-        .logo {
+        .logo-container {
             width: 120px;
-            height: auto;
+            height: 80px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 80px;
         }
-
         .facture-title {
             text-align: center;
             margin: 30px 0;
+            border: 2px solid #000;
+            padding: 15px;
         }
-
         .facture-title h1 {
             font-size: 28px;
-            color: #2c3e50;
+            color: #000;
             margin-bottom: 10px;
         }
-
         .facture-ref {
             font-size: 14px;
-            color: #666;
+            color: #000;
+            font-weight: bold;
         }
-
         .facture-info {
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
         }
-
-        .client-info,
-        .facture-details {
+        .client-info, .facture-details {
             flex: 1;
             padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
+            background: #f5f5f5;
+            border: 1px solid #000;
         }
-
-        .client-info {
-            margin-right: 20px;
-        }
-
+        .client-info { margin-right: 20px; }
         .info-title {
             font-weight: bold;
-            font-size: 14px;
-            color: #2c3e50;
             margin-bottom: 10px;
+            font-size: 14px;
         }
-
-        .table-container {
-            margin: 30px 0;
-        }
-
         .prestations-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
-
-        .prestations-table th {
-            background: #2c3e50;
-            color: white;
-            padding: 12px 8px;
+        .prestations-table th, .prestations-table td {
+            border: 1px solid #000;
+            padding: 10px;
             text-align: left;
+        }
+        .prestations-table th {
+            background-color: #f5f5f5;
             font-weight: bold;
-            font-size: 11px;
         }
-
-        .prestations-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #ddd;
-            font-size: 11px;
-        }
-
-        .prestations-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-
-        .text-right {
+        .text-right { text-align: right; }
+        .totals {
+            margin-top: 30px;
             text-align: right;
         }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .totals {
-            width: 300px;
-            margin-left: auto;
-            margin-top: 20px;
-        }
-
         .totals table {
-            width: 100%;
+            margin-left: auto;
             border-collapse: collapse;
         }
-
         .totals td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .totals .total-label {
-            font-weight: bold;
-            text-align: right;
-        }
-
-        .totals .total-amount {
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .total-final {
-            background: #2c3e50;
-            color: white;
-            font-size: 14px;
-        }
-
-        .conditions {
-            margin-top: 40px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        .conditions h3 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-        }
-
-        .statut-badge {
-            display: inline-block;
             padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 11px;
+            border-bottom: 1px solid #ccc;
+        }
+        .total-final td {
             font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .statut-en-attente {
-            background: #ffeaa7;
-            color: #d63031;
-        }
-
-        .statut-payee {
-            background: #00b894;
-            color: white;
-        }
-
-        .statut-rejetee {
-            background: #d63031;
-            color: white;
-        }
-
-        @media print {
-            .container {
-                max-width: none;
-                margin: 0;
-                padding: 0;
-            }
+            border-bottom: 2px solid #000;
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <!-- En-tête -->
         <div class="header">
             <div class="company-info">
-                <div class="company-name">{{.Company.Nom}}</div>
+                <div class="company-name">{{.Company.Name}}</div>
                 <div class="company-details">
-                    {{.Company.Adresse}}<br>
-                    {{.Company.Telephone}}<br>
+                    {{.Company.Address}}<br>
+                    {{.Company.Phone}}<br>
                     {{.Company.Email}}<br>
                     SIRET: {{.Company.SIRET}}<br>
                     TVA: {{.Company.TVA}}
                 </div>
             </div>
-            <div class="logo-container">
-                <img src="templates/assets/logo.png" alt="Logo" class="logo">
-            </div>
+            <div class="logo-container">LOGO</div>
         </div>
 
         <!-- Titre de la facture -->
@@ -264,22 +154,21 @@
                     <strong>Date d'émission :</strong> {{.DateEmission}}<br>
                     <strong>Date d'échéance :</strong> {{.DateEcheance}}<br>
                     <strong>Type :</strong> {{.TypeFacture}}<br>
-                    <strong>Statut :</strong>
-                    <span class="statut-badge statut-{{.Statut}}">{{.Statut}}</span>
+                    <strong>Statut :</strong> {{.Statut}}
                 </div>
             </div>
         </div>
 
         <!-- Description -->
         {{if .Description}}
-        <div class="description" style="margin-bottom: 20px;">
+        <div style="margin-bottom: 20px;">
             <div class="info-title">Description :</div>
             <p>{{.Description}}</p>
         </div>
         {{end}}
 
         <!-- Tableau des prestations -->
-        <div class="table-container">
+        <div>
             <table class="prestations-table">
                 <thead>
                     <tr>
@@ -304,38 +193,19 @@
         <div class="totals">
             <table>
                 <tr>
-                    <td class="total-label">Sous-total HT :</td>
-                    <td class="total-amount">{{formatPrice .SousTotalHT}}</td>
+                    <td>Sous-total HT :</td>
+                    <td class="text-right">{{formatPrice .SousTotalHT}}</td>
                 </tr>
                 <tr>
-                    <td class="total-label">TVA :</td>
-                    <td class="total-amount">{{formatPrice .TotalTVA}}</td>
+                    <td>TVA :</td>
+                    <td class="text-right">{{formatPrice .TotalTVA}}</td>
                 </tr>
                 <tr class="total-final">
-                    <td class="total-label">Total TTC :</td>
-                    <td class="total-amount">{{formatPrice .TotalTTC}}</td>
+                    <td>Total TTC :</td>
+                    <td class="text-right">{{formatPrice .TotalTTC}}</td>
                 </tr>
             </table>
         </div>
-
-        <!-- Conditions de paiement -->
-        <div class="conditions">
-            <h3>Conditions de paiement</h3>
-            <p>Paiement par virement bancaire sous 30 jours. Toute facture non réglée dans les délais impartis fera
-                l'objet d'une pénalité de retard égale à 3 fois le taux d'intérêt légal en vigueur.</p>
-
-            <div style="margin-top: 15px;">
-                <strong>Coordonnées bancaires :</strong><br>
-                IBAN : {{.Company.IBAN}}<br>
-                BIC : {{.Company.BIC}}
-            </div>
-        </div>
-
-        <!-- Pied de page -->
-        <div class="footer">
-            <p>{{.Company.Nom}} - {{.Company.Adresse}} - SIRET: {{.Company.SIRET}} - TVA: {{.Company.TVA}}</p>
-        </div>
     </div>
 </body>
-
 </html>

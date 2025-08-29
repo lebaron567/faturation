@@ -24,23 +24,23 @@ func GenerateInvoicePDF(facture models.Facture, useFilePath bool) (string, error
 	// Remplir le template avec les données de la facture
 	var tplBuffer bytes.Buffer
 	err = tmpl.Execute(&tplBuffer, map[string]interface{}{
-		"EntrepriseNom":      fmt.Sprintf("%d", facture.EntrepriseID),
-		"EntrepriseAdresse":  "123 rue du Code", // Ajoute la vraie valeur depuis la struct
-		"EntrepriseEmail":    "contact@maboite.com",
+		"EntrepriseNom":       fmt.Sprintf("%d", facture.EntrepriseID),
+		"EntrepriseAdresse":   "123 rue du Code", // Ajoute la vraie valeur depuis la struct
+		"EntrepriseEmail":     "contact@maboite.com",
 		"EntrepriseTelephone": "+33 6 12 34 56 78",
-		"EntrepriseSIRET":    "12345678901234",
-		"EntrepriseIBAN":     "FR7612345987650123456789014",
-		"EntrepriseBIC":      "BIC12345",
-		"ClientNom":          "Client XYZ",
-		"Date":               facture.DateEmission,
-		"Numero":             facture.Numero,
-		"Description":        facture.Description,
-		"MontantHT":          fmt.Sprintf("%.2f", facture.MontantHT),
-		"TVA":                fmt.Sprintf("%.2f", facture.TauxTVA),
-		"MontantTTC":         fmt.Sprintf("%.2f", facture.MontantTTC),
-		"UseFilePath":        useFilePath, 
+		"EntrepriseSIRET":     "12345678901234",
+		"EntrepriseIBAN":      "FR7612345987650123456789014",
+		"EntrepriseBIC":       "BIC12345",
+		"ClientNom":           "Client XYZ",
+		"Date":                facture.DateEmission,
+		"Numero":              facture.Reference,
+		"Description":         facture.Description,
+		"MontantHT":           fmt.Sprintf("%.2f", facture.SousTotalHT),
+		"TVA":                 fmt.Sprintf("%.2f", facture.TotalTVA),
+		"MontantTTC":          fmt.Sprintf("%.2f", facture.TotalTTC),
+		"UseFilePath":         useFilePath,
 	})
-	
+
 	if err != nil {
 		return "", fmt.Errorf("Erreur lors de l'exécution du template : %v", err)
 	}

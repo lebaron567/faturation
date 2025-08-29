@@ -45,6 +45,8 @@ type FacturePDFData struct {
 	TypeFacture     string
 	Statut          string
 	Company         config.CompanyInfo
+	LieuSignature   string
+	DateSignature   string
 }
 
 // CreateFacture godoc
@@ -78,17 +80,80 @@ func CreateFacture(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Générer un numéro de facture si non fourni
-	if facture.Numero == "" {
-		facture.Numero = generateFactureNumber()
+	if facture.Reference == "" {
+		facture.Reference = generateFactureNumber()
 	}
 
 	if err := config.DB.Create(&facture).Error; err != nil {
-		fmt.Printf("❌ ERREUR INSERT FACTURE : %v\n", err)
+		// log supprimé
 		http.Error(w, "Erreur lors de la création de la facture", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Printf("✅ Facture créée avec ID : %d\n", facture.ID)
+		// log supprimé
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(facture)
+}
+
+// CreateFactureFromDevis godoc
+// @Summary Créer une facture à partir d'un devis
+// @Description Génère une facture en copiant les infos d'un devis existant
+// @Tags Factures
+// @Accept json
+// @Produce json
+// @Param devisId path string true "ID du devis à convertir en facture"
+// @Success 201 {object} models.Facture "Facture créée depuis devis"
+// @Failure 404 {string} string "Devis introuvable"
+// @Failure 500 {string} string "Erreur interne du serveur"
+// @Router /api/factures/from-devis/{devisId} [post]
+func CreateFactureFromDevis(w http.ResponseWriter, r *http.Request) {
+	devisId := chi.URLParam(r, "devisId")
+	var devis models.Devis
+	if err := config.DB.Preload("Lignes").Preload("Client").Preload("Entreprise").First(&devis, devisId).Error; err != nil {
+		http.Error(w, "Devis introuvable", http.StatusNotFound)
+		return
+	}
+
+	facture := models.Facture{
+		Reference:        generateFactureNumber(),
+		ClientID:         devis.ClientID,
+		Client:           devis.Client,
+		ClientNom:        devis.Client.Nom,
+		ClientAdresse:    devis.Client.Adresse,
+		ClientEmail:      devis.Client.Email,
+		ClientTelephone:  devis.Client.Telephone,
+		DateEmission:     time.Now(),
+		DateEcheance:     time.Now().AddDate(0, 0, 30),
+		Description:      devis.Objet,
+		TypeFacture:      "classique",
+		SousTotalHT:      devis.SousTotalHT,
+		TotalTVA:         devis.TotalTVA,
+		TotalTTC:         devis.TotalTTC,
+		Statut:           "en_attente",
+		LieuSignature:    devis.LieuSignature,
+		DateSignature:    devis.DateSignature,
+		EntrepriseID:     devis.EntrepriseID,
+		DevisReference:   fmt.Sprintf("DEV-%04d", devis.ID),
+	}
+
+	// Copier les lignes du devis dans la facture
+	for _, ligne := range devis.Lignes {
+		facture.Lignes = append(facture.Lignes, models.LigneFacture{
+			Designation:  ligne.Description,
+			Unite:        "unité",
+			Quantite:     float64(ligne.Quantite),
+			PrixUnitaire: ligne.PrixUnitaire,
+			MontantHT:    ligne.PrixUnitaire * float64(ligne.Quantite),
+			TVA:          ligne.TVA,
+			MontantTTC:   ligne.PrixUnitaire * float64(ligne.Quantite) * (1 + ligne.TVA/100),
+		})
+	}
+
+	if err := config.DB.Create(&facture).Error; err != nil {
+		http.Error(w, "Erreur lors de la création de la facture", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(facture)
@@ -211,7 +276,7 @@ func GenerateFacturePDF(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	var facture models.Facture
-	if err := config.DB.First(&facture, id).Error; err != nil {
+	if err := config.DB.Preload("Client").Preload("Lignes").First(&facture, id).Error; err != nil {
 		http.Error(w, "Facture introuvable", http.StatusNotFound)
 		return
 	}
@@ -232,8 +297,8 @@ func GenerateFacturePDF(w http.ResponseWriter, r *http.Request) {
 
 	// Choisir le template selon le type de facture
 	templateName := "facture.html"
-	if facture.Type == "etat_avancement" {
-		templateName = "facture_avancement.html"
+	if facture.TypeFacture == "acompte" {
+		templateName = "facture_acompte.html"
 	}
 
 	tmpl, err := template.New(templateName).Funcs(funcMap).ParseFiles("templates/" + templateName)
@@ -271,7 +336,7 @@ func GenerateFacturePDF(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Nom de fichier personnalisé
-	filename := fmt.Sprintf("facture_%s.pdf", facture.Numero)
+	filename := fmt.Sprintf("facture_%s.pdf", facture.Reference)
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%s", filename))
 	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
@@ -291,7 +356,7 @@ func DownloadFacturePDF(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	var facture models.Facture
-	if err := config.DB.First(&facture, id).Error; err != nil {
+	if err := config.DB.Preload("Client").Preload("Lignes").First(&facture, id).Error; err != nil {
 		http.Error(w, "Facture introuvable", http.StatusNotFound)
 		return
 	}
@@ -311,8 +376,8 @@ func DownloadFacturePDF(w http.ResponseWriter, r *http.Request) {
 
 	// Choisir le template selon le type de facture
 	templateName := "facture.html"
-	if facture.Type == "etat_avancement" {
-		templateName = "facture_avancement.html"
+	if facture.TypeFacture == "acompte" {
+		templateName = "facture_acompte.html"
 	}
 
 	tmpl, err := template.New(templateName).Funcs(funcMap).ParseFiles("templates/" + templateName)
@@ -348,7 +413,7 @@ func DownloadFacturePDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filename := fmt.Sprintf("facture_%s.pdf", facture.Numero)
+	filename := fmt.Sprintf("facture_%s.pdf", facture.Reference)
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
@@ -587,42 +652,71 @@ func GetFacturesByStatut(w http.ResponseWriter, r *http.Request) {
 // prepareFacturePDFData prépare les données pour le template PDF
 func prepareFacturePDFData(facture models.Facture) FacturePDFData {
 	// Formatage des dates
-	dateEmission := time.Now().Format("02 janvier 2006")
-	if facture.DateEmission != "" {
-		if parsed, err := time.Parse("2006-01-02", facture.DateEmission); err == nil {
-			dateEmission = parsed.Format("02 janvier 2006")
-		}
+	var dateEmission, dateEcheance string
+	if !facture.DateEmission.IsZero() {
+		dateEmission = facture.DateEmission.Format("02 janvier 2006")
+	} else {
+		dateEmission = time.Now().Format("02 janvier 2006")
 	}
-
-	dateEcheance := time.Now().AddDate(0, 1, 0).Format("02 janvier 2006")
-	if facture.DateEcheance != "" {
-		if parsed, err := time.Parse("2006-01-02", facture.DateEcheance); err == nil {
-			dateEcheance = parsed.Format("02 janvier 2006")
-		}
+	
+	if !facture.DateEcheance.IsZero() {
+		dateEcheance = facture.DateEcheance.Format("02 janvier 2006")
+	} else {
+		dateEcheance = time.Now().AddDate(0, 1, 0).Format("02 janvier 2006")
 	}
 
 	// Calculer les montants TVA si nécessaire
-	montantTVA := facture.MontantTTC - facture.MontantHT
-	if montantTVA == 0 && facture.TauxTVA > 0 {
-		montantTVA = facture.MontantHT * (facture.TauxTVA / 100)
+	montantTVA := facture.TotalTVA
+	if montantTVA == 0 && facture.TotalTTC > 0 && facture.SousTotalHT > 0 {
+		montantTVA = facture.TotalTTC - facture.SousTotalHT
 	}
 
 	// Informations de l'entreprise
 	company := config.GetCompanyInfo()
 	devisConfig := config.GetDevisConfig()
 
+	// Informations client
+	var clientNom, clientAdresse, clientEmail, clientTelephone string
+	if facture.Client.ID != 0 {
+		clientNom = facture.Client.Nom
+		clientAdresse = facture.Client.Adresse
+		clientEmail = facture.Client.Email
+		clientTelephone = facture.Client.Telephone
+	}
+
+	// Préparer les lignes de facture
+	var lignes []LigneFacture
+	for _, ligne := range facture.Lignes {
+		lignes = append(lignes, LigneFacture{
+			Designation:  ligne.Designation,
+			Unite:        ligne.Unite,
+			Quantite:     ligne.Quantite,
+			PrixUnitaire: ligne.PrixUnitaire,
+			MontantHT:    ligne.MontantHT,
+			TVA:          ligne.TVA,
+			MontantTTC:   ligne.MontantTTC,
+		})
+	}
+
 	return FacturePDFData{
-		Reference:    facture.Numero,
-		Ville:        devisConfig.DefaultCity,
-		DateEmission: dateEmission,
-		DateEcheance: dateEcheance,
-		Description:  facture.Description,
-		SousTotalHT:  facture.MontantHT,
-		TotalTVA:     montantTVA,
-		TotalTTC:     facture.MontantTTC,
-		TypeFacture:  facture.Type,
-		Statut:       facture.Statut,
-		Company:      company,
+		Reference:       facture.Reference,
+		Ville:           devisConfig.DefaultCity,
+		DateEmission:    dateEmission,
+		DateEcheance:    dateEcheance,
+		ClientNom:       clientNom,
+		ClientAdresse:   clientAdresse,
+		ClientEmail:     clientEmail,
+		ClientTelephone: clientTelephone,
+		Description:     facture.Description,
+		Lignes:          lignes,
+		SousTotalHT:     facture.SousTotalHT,
+		TotalTVA:        montantTVA,
+		TotalTTC:        facture.TotalTTC,
+		TypeFacture:     facture.TypeFacture,
+		Statut:          facture.Statut,
+		Company:         company,
+		LieuSignature:   facture.LieuSignature,
+		DateSignature:   facture.DateSignature,
 	}
 }
 
@@ -635,10 +729,10 @@ func validateFactureData(facture *models.Facture) error {
 	}
 
 	// Vérifier le type de facture
-	validTypes := []string{"standard", "etat_avancement", "auto_liquidation"}
+	validTypes := []string{"classique", "acompte", "avancement", "standard"}
 	typeValide := false
 	for _, t := range validTypes {
-		if t == facture.Type {
+		if t == facture.TypeFacture {
 			typeValide = true
 			break
 		}
@@ -649,7 +743,7 @@ func validateFactureData(facture *models.Facture) error {
 	}
 
 	// Vérifier les montants
-	if facture.MontantHT < 0 || facture.MontantTTC < 0 {
+	if facture.SousTotalHT < 0 || facture.TotalTTC < 0 {
 		return fmt.Errorf("les montants ne peuvent pas être négatifs")
 	}
 
@@ -660,9 +754,9 @@ func validateFactureData(facture *models.Facture) error {
 func generateFactureNumber() string {
 	year := time.Now().Year()
 
-	// Compter les factures de l'année
+	// Compter les factures de l'année (syntaxe PostgreSQL)
 	var count int64
-	config.DB.Model(&models.Facture{}).Where("YEAR(created_at) = ?", year).Count(&count)
+	config.DB.Model(&models.Facture{}).Where("EXTRACT(YEAR FROM created_at) = ?", year).Count(&count)
 
 	return fmt.Sprintf("FAC-%d-%04d", year, count+1)
 }

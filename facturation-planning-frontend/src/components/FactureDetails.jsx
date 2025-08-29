@@ -38,34 +38,54 @@ const FactureDetails = () => {
         }
     };
 
-    const downloadPDF = async () => {
+    const generatePDF = async (download = false) => {
+        if (!id || id === 'undefined') {
+            console.error("❌ ID facture invalide:", id);
+            alert("❌ Erreur: ID de la facture invalide");
+            return;
+        }
+
         try {
-            // Essayer d'abord l'endpoint principal
-            let response;
-            try {
-                response = await axios.get(`/factures/${id}/pdf`, {
-                    responseType: 'blob'
-                });
-            } catch (err) {
-                // Si l'endpoint principal échoue, essayer l'endpoint de téléchargement
-                console.log("Tentative avec l'endpoint de téléchargement...");
-                response = await axios.get(`/api/factures/${id}/download`, {
-                    responseType: 'blob'
-                });
+            const endpoint = download ? 'download' : 'pdf';
+            console.log(`📄 Génération PDF via API backend pour facture ${id}, endpoint: ${endpoint}`);
+
+            const response = await axios.get(`/factures/${id}/${endpoint}`, {
+                responseType: 'blob'
+            });
+
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            console.log(`📄 PDF reçu du backend, taille: ${blob.size} bytes`);
+
+            const url = window.URL.createObjectURL(blob);
+
+            if (download) {
+                // Téléchargement
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `facture_${facture?.numero || id}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log("📄 PDF téléchargé avec succès");
+            } else {
+                // Affichage dans un nouvel onglet
+                window.open(url, '_blank');
+                console.log("📄 PDF ouvert dans un nouvel onglet");
             }
 
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `facture_${facture.numero || id}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
+            // Nettoyer l'URL après un délai
+            setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+
         } catch (err) {
-            console.error("Erreur lors du téléchargement:", err);
-            alert("Erreur lors du téléchargement du PDF");
+            console.error("❌ Erreur génération PDF:", err);
+            console.error("❌ Détails de l'erreur:", err.response?.data || err.message);
+            alert(`❌ Erreur lors de la génération du PDF: ${err.response?.status || err.message}`);
         }
+    };
+
+    const downloadPDF = async () => {
+        // Utiliser la nouvelle fonction générique pour télécharger
+        await generatePDF(true);
     };
 
     const deleteFacture = async () => {
@@ -162,8 +182,19 @@ const FactureDetails = () => {
                 </div>
 
                 <div className="header-actions">
-                    <button onClick={downloadPDF} className="btn btn-primary">
-                        📄 Télécharger PDF
+                    <button 
+                        onClick={() => generatePDF(false)} 
+                        className="btn btn-info"
+                        title="Visualiser PDF"
+                    >
+                        👁️ Voir PDF
+                    </button>
+                    <button 
+                        onClick={() => generatePDF(true)} 
+                        className="btn btn-primary"
+                        title="Télécharger PDF"
+                    >
+                        ⬇️ Télécharger PDF
                     </button>
                     <Link to={`/factures/${id}/edit`} className="btn btn-secondary">
                         ✏️ Modifier

@@ -3,6 +3,9 @@ import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
+// Exporter le contexte pour utilisation directe
+export { AuthContext };
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
@@ -92,7 +95,7 @@ export const AuthProvider = ({ children }) => {
         }, 60000); // 1 minute
 
         return () => clearInterval(interval);
-    }, [logout]); // Ajout de logout dans les dépendances
+    }, [logout, checkAuth]); // Ajout de checkAuth dans les dépendances
 
     // Intercepter les erreurs d'autorisation
     useEffect(() => {

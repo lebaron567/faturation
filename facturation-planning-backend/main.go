@@ -61,8 +61,9 @@ func main() {
 
 	// ✅ Démarrer le serveur
 	port := ":8080"
-	fmt.Println("🚀 Serveur démarré sur http://localhost" + port)
+	fmt.Println("🚀 Serveur démarré sur http://0.0.0.0" + port)
 	fmt.Println("📖 Documentation Swagger : http://localhost" + port + "/swagger/index.html")
+	fmt.Println("🌐 Accessible depuis WSL : http://172.22.140.106" + port)
 
 	log.Fatal(http.ListenAndServe(port, r))
 }
