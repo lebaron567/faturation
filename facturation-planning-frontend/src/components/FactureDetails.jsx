@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "../axiosInstance";
 import "../styles/FactureDetails.css";
@@ -9,11 +9,7 @@ const FactureDetails = () => {
     const [facture, setFacture] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchFacture();
-    }, [id]);
-
-    const fetchFacture = async () => {
+    const fetchFacture = useCallback(async () => {
         try {
             setLoading(true);
             const response = await axios.get(`/factures/${id}`);
@@ -25,7 +21,11 @@ const FactureDetails = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id, navigate]);
+
+    useEffect(() => {
+        fetchFacture();
+    }, [fetchFacture]);
 
     const updateStatut = async (nouveauStatut) => {
         try {
@@ -81,11 +81,6 @@ const FactureDetails = () => {
             console.error("❌ Détails de l'erreur:", err.response?.data || err.message);
             alert(`❌ Erreur lors de la génération du PDF: ${err.response?.status || err.message}`);
         }
-    };
-
-    const downloadPDF = async () => {
-        // Utiliser la nouvelle fonction générique pour télécharger
-        await generatePDF(true);
     };
 
     const deleteFacture = async () => {
@@ -182,15 +177,15 @@ const FactureDetails = () => {
                 </div>
 
                 <div className="header-actions">
-                    <button 
-                        onClick={() => generatePDF(false)} 
+                    <button
+                        onClick={() => generatePDF(false)}
                         className="btn btn-info"
                         title="Visualiser PDF"
                     >
                         👁️ Voir PDF
                     </button>
-                    <button 
-                        onClick={() => generatePDF(true)} 
+                    <button
+                        onClick={() => generatePDF(true)}
                         className="btn btn-primary"
                         title="Télécharger PDF"
                     >

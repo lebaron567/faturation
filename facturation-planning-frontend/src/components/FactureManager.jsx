@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import axios from "../axiosInstance";
-import FactureSearch from "./FactureSearch";
 import "../styles/FactureManager.css";
 
 const FactureManager = () => {
@@ -17,27 +16,7 @@ const FactureManager = () => {
         date_fin: ""
     });
 
-    useEffect(() => {
-        fetchClients();
-        fetchFactures();
-    }, []);
-
-    const fetchClients = async () => {
-        try {
-            const profileResponse = await axios.get("/profile");
-            const entrepriseId = profileResponse.data.id;
-
-            const response = await axios.get("/clients");
-            const clientsFiltered = response.data.filter(client =>
-                client.entreprise_id === entrepriseId
-            );
-            setClients(clientsFiltered);
-        } catch (err) {
-            console.error("Erreur lors du chargement des clients:", err);
-        }
-    };
-
-    const fetchFactures = async () => {
+    const fetchFactures = useCallback(async () => {
         try {
             setLoading(true);
             let endpoint = "/factures";
@@ -66,6 +45,26 @@ const FactureManager = () => {
             setFactures([]);
         } finally {
             setLoading(false);
+        }
+    }, [filters]);
+
+    useEffect(() => {
+        fetchClients();
+        fetchFactures();
+    }, [fetchFactures]);
+
+    const fetchClients = async () => {
+        try {
+            const profileResponse = await axios.get("/profile");
+            const entrepriseId = profileResponse.data.id;
+
+            const response = await axios.get("/clients");
+            const clientsFiltered = response.data.filter(client =>
+                client.entreprise_id === entrepriseId
+            );
+            setClients(clientsFiltered);
+        } catch (err) {
+            console.error("Erreur lors du chargement des clients:", err);
         }
     };
 
@@ -157,20 +156,6 @@ const FactureManager = () => {
             console.error("❌ Détails de l'erreur:", err.response?.data || err.message);
             alert(`❌ Erreur lors de la génération du PDF: ${err.response?.status || err.message}`);
         }
-    };
-
-    const downloadPDF = async (id, type) => {
-        // Utiliser la nouvelle fonction générique
-        await generatePDF(id, true);
-    };
-
-    const handleSearchResults = (results) => {
-        setFactures(results);
-        setLoading(false);
-    };
-
-    const handleSearchReset = () => {
-        fetchFactures();
     };
 
     const getStatusBadge = (statut) => {

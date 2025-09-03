@@ -1,142 +1,318 @@
-/* ==================== DISPOSITION AVEC APERÇU ==================== */
-.facture-form-with-preview {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  height: calc(100vh - 60px);
-  overflow: hidden;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 24px;
-  box-sizing: border-box;
+.facture-form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.form-container {
-  overflow-y: auto;
-  padding-right: 12px;
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-.preview-container {
-  position: sticky;
-  top: 0;
-  height: fit-content;
-  max-height: 100%;
-  overflow: hidden;
+.form-header h1 {
+    color: #333;
+    margin: 0;
+    font-size: 28px;
 }
 
-/* Ajustements pour la nouvelle disposition */
+.devis-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border-left: 4px solid #28a745;
+}
+
+.devis-section h3 {
+    color: #28a745;
+    margin-bottom: 15px;
+}
+
+.devis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.devis-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.devis-info {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex: 1;
+}
+
+.devis-info strong {
+    color: #007bff;
+    min-width: 120px;
+}
+
+.devis-info span {
+    color: #666;
+    flex: 1;
+}
+
 .facture-form {
-  width: 100%;
-  min-height: auto;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
-.facture-form h2 {
-  text-align: center;
-  margin-bottom: 3rem;
-  color: #2c3e50;
-  font-size: 2.2rem;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.form-section {
+    background: #fafafa;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
 }
 
-.facture-form form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-  padding: 2rem;
+.form-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.facture-form label {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 1rem;
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
-.facture-form input {
-  padding: 1rem;
-  border: 2px solid rgba(0, 123, 255, 0.2);
-  border-radius: 10px;
-  font-size: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 0.5rem;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
+.form-group {
+    display: flex;
+    flex-direction: column;
 }
 
-.facture-form input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
+.form-group label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
-.facture-form button[type="submit"] {
-  padding: 1rem 2rem;
-  background-color: #007bff;
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
+.form-control {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
 }
 
-.facture-form button[type="submit"]:hover:not(:disabled) {
-  background-color: #0056b3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+.form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.facture-form button[type="submit"]:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
+.ligne-item {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    margin-bottom: 20px;
 }
 
-.facture-form h3 {
-  text-align: center;
-  margin-top: 2rem;
-  color: #2c3e50;
-  font-size: 1.4rem;
-  font-weight: 600;
+.ligne-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
+.ligne-header h4 {
+    color: #333;
+    margin: 0;
+    font-size: 16px;
+}
+
+.ligne-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    align-items: end;
+}
+
+.add-ligne-btn {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.add-ligne-btn:hover {
+    background: #218838;
+}
+
+.totals-section {
+    background: #e8f4f8;
+    border-color: #17a2b8;
+}
+
+.totals-display {
+    background: white;
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.total-row:last-child {
+    border-bottom: none;
+}
+
+.total-ttc {
+    background: #f8f9fa;
+    padding: 15px;
+    margin: 10px -10px -10px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #28a745;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px 0;
+    border-top: 2px solid #f0f0f0;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 12px 25px;
+    border: 2px solid;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    border-color: #004085;
+}
+
+.btn-primary:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.btn-light {
+    background: #f8f9fa;
+    color: #6c757d;
+    border-color: #f8f9fa;
+}
+
+.btn-light:hover {
+    background: #e2e6ea;
+    border-color: #dae0e5;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .facture-form {
-    padding: 1rem;
-  }
+    .facture-form-container {
+        margin: 10px;
+        padding: 15px;
+    }
 
-  .facture-form form {
-    padding: 1.5rem;
-  }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
 
-  .facture-form h2 {
-    font-size: 1.8rem;
-  }
-}
+    .ligne-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
 
-.facture-form a {
-  display: block;
-  text-align: center;
-  margin-top: 10px;
-  color: #007bff;
-  font-weight: 500;
-  text-decoration: none;
-}
+    .form-actions {
+        flex-direction: column;
+    }
 
-.facture-form a:hover {
-  text-decoration: underline;
+    .devis-item {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .devis-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
 }

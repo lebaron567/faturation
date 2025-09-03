@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../axiosInstance";
 import "../styles/FactureFormComplet.css";
@@ -10,6 +10,7 @@ const FactureFormComplet = () => {
 
     const [form, setForm] = useState({
         type: "classique",
+        client_id: "",
         client_nom: "",
         description: "",
         date_emission: new Date().toISOString().split('T')[0],
@@ -21,30 +22,9 @@ const FactureFormComplet = () => {
 
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState([]);
+    const [devis, setDevis] = useState([]);
 
-    useEffect(() => {
-        fetchClients();
-        if (isEdit) {
-            fetchFacture();
-        }
-    }, [id]);
-
-    const fetchClients = async () => {
-        try {
-            const profileResponse = await axios.get("/profile");
-            const entrepriseId = profileResponse.data.id;
-
-            const response = await axios.get("/clients");
-            const clientsFiltered = response.data.filter(client =>
-                client.entreprise_id === entrepriseId
-            );
-            setClients(clientsFiltered);
-        } catch (err) {
-            console.error("Erreur lors du chargement des clients:", err);
-        }
-    };
-
-    const fetchFacture = async () => {
+    const fetchFacture = useCallback(async () => {
         try {
             setLoading(true);
             const response = await axios.get(`/factures/${id}`);
@@ -67,11 +47,113 @@ const FactureFormComplet = () => {
         } finally {
             setLoading(false);
         }
+    }, [id, navigate]);
+
+    useEffect(() => {
+        fetchClients();
+        fetchDevis();
+        if (isEdit) {
+            fetchFacture();
+        }
+    }, [id, isEdit, fetchFacture]);
+
+    const fetchClients = async () => {
+        try {
+            const profileResponse = await axios.get("/profile");
+            const entrepriseId = profileResponse.data.id;
+
+            const response = await axios.get("/clients");
+            const clientsFiltered = response.data.filter(client =>
+                client.entreprise_id === entrepriseId
+            );
+            setClients(clientsFiltered);
+        } catch (err) {
+            console.error("Erreur lors du chargement des clients:", err);
+        }
+    };
+
+    const fetchDevis = async () => {
+        try {
+            const response = await axios.get("/devis");
+            const allDevis = Array.isArray(response.data) ? response.data : [];
+            setDevis(allDevis);
+        } catch (err) {
+            console.error("❌ Erreur récupération devis:", err);
+            setDevis([]);
+        }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+
+        if (name === 'client_id') {
+            // Trouver le nom du client correspondant
+            const selectedClient = clients.find(client => client.id.toString() === value);
+            setForm(prev => ({
+                ...prev,
+                client_id: value,
+                client_nom: selectedClient ? selectedClient.nom : ""
+            }));
+        } else {
+            setForm(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const createFromDevis = async (devisId) => {
+        try {
+            setLoading(true);
+
+            // Récupérer les détails du devis
+            const devisResponse = await axios.get(`/devis/${devisId}`);
+            const devisData = devisResponse.data;
+
+            // Préparer les données selon le format exact attendu par le backend Go
+            const montantHT = parseFloat(devisData.sous_total_ht || devisData.total_ht || 0);
+            const tauxTVA = 20; // TVA par défaut
+            const montantTTC = montantHT * (1 + tauxTVA / 100);
+
+            const createData = {
+                clientID: parseInt(devisData.client_id),
+                typeFacture: "classique",
+                dateCreation: new Date().toISOString(),
+                dateEcheance: form.date_echeance ? 
+                    new Date(form.date_echeance + "T00:00:00.000Z").toISOString() : 
+                    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                sousTotalHT: montantHT,
+                totalTTC: montantTTC,
+                tauxTVA: tauxTVA,
+                lignes: devisData.lignes ? devisData.lignes.map(ligne => {
+                    const quantite = parseInt(ligne.quantite) || 1;
+                    const prixUnitaire = parseFloat(ligne.prix_unitaire) || 0;
+                    const totalLigne = quantite * prixUnitaire;
+                    return {
+                        description: ligne.description || devisData.objet || "Ligne depuis devis",
+                        quantite: quantite,
+                        prixUnitaire: prixUnitaire,
+                        totalLigne: totalLigne,
+                        tauxTVA: parseInt(ligne.tva) || tauxTVA
+                    };
+                }) : [{
+                    description: devisData.objet || "Facture créée depuis devis",
+                    quantite: 1,
+                    prixUnitaire: montantHT,
+                    totalLigne: montantHT,
+                    tauxTVA: tauxTVA
+                }]
+            };
+
+            const response = await axios.post("/factures", createData);
+            alert(`✅ Facture créée avec succès depuis le devis ! Référence: ${response.data.Reference || response.data.reference || 'N/A'}`);
+            navigate("/factures");
+        } catch (err) {
+            console.error("❌ Erreur création facture depuis devis:", err);
+            alert(`❌ Erreur: ${err.response?.data?.message || err.response?.data?.error || err.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -80,34 +162,34 @@ const FactureFormComplet = () => {
 
         try {
             // Validation
-            if (!form.client_nom || !form.description || !form.montant_ht) {
+            if (!form.client_id || !form.description || !form.montant_ht) {
                 alert("❌ Veuillez remplir tous les champs obligatoires");
                 setLoading(false);
                 return;
             }
-
-            const profileResponse = await axios.get("/profile");
-            const entrepriseId = profileResponse.data.id;
 
             // Calcul du montant TTC
             const montantHT = parseFloat(form.montant_ht);
             const tva = parseFloat(form.tva) || 0;
             const montantTTC = montantHT * (1 + tva / 100);
 
+            // Format des données selon le backend Go attendu
             const data = {
-                type: form.type,
-                entreprise_id: entrepriseId,
-                client_nom: form.client_nom.trim(),
-                description: form.description.trim(),
-                date_emission: new Date(form.date_emission + 'T00:00:00Z').toISOString(),
-                date_echeance: form.date_echeance ? new Date(form.date_echeance + 'T23:59:59Z').toISOString() : null,
-                montant_ht: montantHT,
-                tva: tva,
-                montant_ttc: montantTTC,
-                statut: form.statut
+                clientID: parseInt(form.client_id),
+                typeFacture: form.type,
+                dateCreation: new Date(form.date_emission + "T00:00:00.000Z").toISOString(),
+                dateEcheance: new Date(form.date_echeance + "T00:00:00.000Z").toISOString(),
+                sousTotalHT: montantHT,
+                totalTTC: montantTTC,
+                tauxTVA: tva,
+                lignes: [{
+                    description: form.description.trim(),
+                    quantite: 1,
+                    prixUnitaire: montantHT,
+                    totalLigne: montantHT,
+                    tauxTVA: tva
+                }]
             };
-
-            console.log("📤 Données envoyées:", data);
 
             if (isEdit) {
                 await axios.put(`/factures/${id}`, data);
@@ -161,6 +243,62 @@ const FactureFormComplet = () => {
                 </div>
             </div>
 
+            {/* Section création depuis devis - uniquement en mode création */}
+            {!isEdit && devis.length > 0 && (
+                <div className="devis-section" style={{
+                    background: '#f8f9fa',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    marginBottom: '30px',
+                    borderLeft: '4px solid #28a745'
+                }}>
+                    <h3 style={{ color: '#28a745', marginBottom: '15px' }}>🚀 Création rapide depuis un devis</h3>
+                    <div className="devis-list">
+                        {devis.map((d) => (
+                            <div key={d.id} style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '15px',
+                                background: 'white',
+                                borderRadius: '6px',
+                                border: '1px solid #ddd',
+                                marginBottom: '10px'
+                            }}>
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
+                                    <strong style={{ color: '#007bff', minWidth: '120px' }}>
+                                        DEVIS-{String(d.id).padStart(4, '0')}
+                                    </strong>
+                                    <span style={{ color: '#666', flex: 1 }}>{d.client?.nom}</span>
+                                    <span style={{ color: '#666' }}>{d.objet}</span>
+                                    <strong>{parseFloat(d.total_ttc || 0).toFixed(2)} €</strong>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => createFromDevis(d.id)}
+                                    disabled={loading}
+                                    className="btn"
+                                    style={{
+                                        background: '#28a745',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '8px 15px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    📄 Créer Facture
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <hr style={{ margin: '20px 0', border: '1px solid #ddd' }} />
+                    <p style={{ margin: 0, color: '#666', fontStyle: 'italic' }}>
+                        Ou créer une facture manuelle ci-dessous
+                    </p>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit}>
                 <div className="form-section">
                     <h3>Type de facture</h3>
@@ -210,14 +348,14 @@ const FactureFormComplet = () => {
                         Nom du client *
                         {clients.length > 0 ? (
                             <select
-                                name="client_nom"
-                                value={form.client_nom}
+                                name="client_id"
+                                value={form.client_id}
                                 onChange={handleChange}
                                 required
                             >
                                 <option value="">-- Sélectionner un client --</option>
                                 {clients.map((client) => (
-                                    <option key={client.id} value={client.nom}>
+                                    <option key={client.id} value={client.id}>
                                         {client.nom} ({client.email})
                                     </option>
                                 ))}

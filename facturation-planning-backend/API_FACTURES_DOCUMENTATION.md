@@ -1,220 +1,212 @@
-# API FACTURES - Documentation Complete
+# API FACTURES - Documentation Complète
 
-## 1. Creer une facture classique
-POST /factures
+## 1. Créer une facture classique
+POST /api/factures
 
-DONNEES A ENVOYER:
+DONNÉES À ENVOYER:
 {
-  "client_id": 1,
-  "description": "Developpement site web",
-  "type_facture": "classique",
-  "date_emission": "2025-03-17T00:00:00Z",
-  "date_echeance": "2025-04-17T00:00:00Z",
-  "lieu_signature": "Paris",
-  "date_signature": "17/03/2025",
+  "clientID": 1,
+  "typeFacture": "classique",
+  "dateCreation": "2025-09-01T00:00:00Z",
+  "dateEcheance": "2025-10-01T00:00:00Z",
+  "sousTotalHT": 1000.00,
+  "totalTTC": 1200.00,
+  "tauxTVA": 20.0,
   "lignes": [
     {
-      "designation": "Developpement frontend",
-      "unite": "jour",
+      "description": "Développement frontend",
       "quantite": 10,
-      "prix_unitaire": 500.00,
-      "tva": 20
+      "prixUnitaire": 500.00,
+      "totalLigne": 5000.00,
+      "tauxTVA": 20.0
     },
     {
-      "designation": "Hebergement annuel",
-      "unite": "forfait",
+      "description": "Hébergement annuel", 
       "quantite": 1,
-      "prix_unitaire": 200.00,
-      "tva": 20
+      "prixUnitaire": 200.00,
+      "totalLigne": 200.00,
+      "tauxTVA": 20.0
     }
   ]
 }
 
-REPONSE RECUE:
+RÉPONSE REÇUE:
 {
-  "id": 1,
-  "reference": "FAC-2025-001",
-  "created_at": "2025-03-17T14:09:30.706109+01:00",
-  "client_id": 1,
-  "client": {
-    "id": 1,
-    "nom": "Entreprise ABC",
-    "adresse": "123 Rue de la Paix, 75001 Paris",
-    "email": "contact@abc.com",
-    "telephone": "01 23 45 67 89"
+  "ID": 1,
+  "Reference": "FAC-2025-0001",
+  "CreatedAt": "2025-09-01T14:09:30.706109+01:00",
+  "ClientID": 1,
+  "Client": {
+    "ID": 1,
+    "Nom": "Barotin",
+    "Prenom": "Emeric",
+    "Email": "contact@example.com",
+    "Telephone": "01 23 45 67 89",
+    "Adresse": "123 Rue de la Paix",
+    "CodePostal": "75001",
+    "Ville": "Paris"
   },
-  "description": "Developpement site web",
-  "type_facture": "classique",
-  "date_emission": "2025-03-17T00:00:00Z",
-  "date_echeance": "2025-04-17T00:00:00Z",
-  "sous_total_ht": 5200.00,
-  "total_tva": 1040.00,
-  "total_ttc": 6240.00,
-  "statut": "en_attente",
-  "lieu_signature": "Paris",
-  "date_signature": "17/03/2025",
-  "lignes": [
+  "TypeFacture": "classique",
+  "DateCreation": "2025-09-01T00:00:00Z",
+  "DateEcheance": "2025-10-01T00:00:00Z",
+  "SousTotalHT": 5200.00,
+  "TotalTTC": 6240.00,
+  "TauxTVA": 20.0,
+  "MontantTVA": 1040.00,
+  "Statut": "en attente",
+  "Lignes": [
     {
-      "id": 1,
-      "designation": "Developpement frontend",
-      "unite": "jour",
-      "quantite": 10,
-      "prix_unitaire": 500.00,
-      "montant_ht": 5000.00,
-      "tva": 20,
-      "montant_ttc": 6000.00
+      "ID": 1,
+      "Description": "Développement frontend",
+      "Quantite": 10,
+      "PrixUnitaire": 500.00,
+      "TotalLigne": 5000.00,
+      "TauxTVA": 20.0
     },
     {
-      "id": 2,
-      "designation": "Hebergement annuel",
-      "unite": "forfait",
-      "quantite": 1,
-      "prix_unitaire": 200.00,
-      "montant_ht": 200.00,
-      "tva": 20,
-      "montant_ttc": 240.00
+      "ID": 2,
+      "Description": "Hébergement annuel",
+      "Quantite": 1,
+      "PrixUnitaire": 200.00,
+      "TotalLigne": 200.00,
+      "TauxTVA": 20.0
     }
   ]
 }
 
-## 2. Creer une facture d'acompte
-POST /factures
+## 2. Créer une facture d'acompte
+POST /api/factures
 
-DONNEES A ENVOYER:
+DONNÉES À ENVOYER:
 {
-  "client_id": 1,
-  "description": "Acompte developpement site web",
-  "type_facture": "acompte",
-  "date_emission": "2025-03-17T00:00:00Z",
-  "date_echeance": "2025-04-17T00:00:00Z",
-  "devis_reference": "DEV-2025-001",
-  "pourcentage_acompte": 50,
-  "lieu_signature": "Paris",
-  "date_signature": "17/03/2025",
+  "clientID": 1,
+  "typeFacture": "acompte",
+  "dateCreation": "2025-09-01T00:00:00Z",
+  "dateEcheance": "2025-10-01T00:00:00Z",
+  "sousTotalHT": 1250.00,
+  "totalTTC": 1500.00,
+  "tauxTVA": 20.0,
   "lignes": [
     {
-      "designation": "Acompte 50% developpement",
-      "unite": "forfait",
+      "description": "Acompte 50% développement",
       "quantite": 1,
-      "prix_unitaire": 2500.00,
-      "tva": 20
+      "prixUnitaire": 1250.00,
+      "totalLigne": 1250.00,
+      "tauxTVA": 20.0
     }
   ]
 }
 
-## 3. Creer facture depuis un devis
-POST /factures/from-devis/{devisId}
+## 3. Créer facture depuis un devis
+POST /api/factures/from-devis/{devisId}
 
-DONNEES A ENVOYER:
+DONNÉES À ENVOYER:
 {
-  "type_facture": "classique",
-  "date_echeance": "2025-04-17T00:00:00Z",
-  "lieu_signature": "Paris",
-  "date_signature": "17/03/2025"
+  "typeFacture": "classique",
+  "dateEcheance": "2025-10-01T00:00:00Z"
 }
 
-## 4. Recuperer toutes les factures
-GET /factures
+## 4. Récupérer toutes les factures
+GET /api/factures
 
-REPONSE:
+RÉPONSE:
 [
   {
-    "id": 1,
-    "reference": "FAC-2025-001",
-    "client_nom": "Entreprise ABC",
-    "description": "Developpement site web",
-    "type_facture": "classique",
-    "total_ttc": 6240.00,
-    "statut": "en_attente",
-    "date_emission": "2025-03-17T00:00:00Z",
-    "date_echeance": "2025-04-17T00:00:00Z"
+    "ID": 1,
+    "Reference": "FAC-2025-0001",
+    "TypeFacture": "classique",
+    "DateCreation": "2025-09-01T00:00:00Z",
+    "DateEcheance": "2025-10-01T00:00:00Z",
+    "TotalTTC": 6240.00,
+    "Statut": "en attente"
   }
 ]
 
-## 5. Recuperer une facture par ID
-GET /factures/{id}
+## 5. Récupérer une facture par ID
+GET /api/factures/{id}
 
-REPONSE: Facture complete avec toutes les lignes
+RÉPONSE: Facture complète avec toutes les lignes
 
 ## 6. Modifier une facture
-PUT /factures/{id}
+PUT /api/factures/{id}
 
-DONNEES A ENVOYER: Meme format que la creation, avec les champs a modifier
+DONNÉES À ENVOYER: Même format que la création, avec les champs à modifier
 
 ## 7. Supprimer une facture
-DELETE /factures/{id}
+DELETE /api/factures/{id}
 
-REPONSE: { "message": "Facture supprimee avec succes" }
+RÉPONSE: { "message": "Facture supprimée avec succès" }
 
-## 8. Generer PDF
-GET /factures/{id}/pdf
+## 8. Générer PDF
+GET /api/factures/{id}/pdf
 
-REPONSE: PDF en ligne (Content-Type: application/pdf)
+RÉPONSE: PDF en ligne (Content-Type: application/pdf)
 
-## 9. Telecharger PDF
-GET /factures/{id}/download
+## 9. Télécharger PDF
+GET /api/factures/{id}/download
 
-REPONSE: Telechargement du PDF avec nom de fichier
+RÉPONSE: Téléchargement du PDF avec nom de fichier
 
 ## 10. Changer le statut
-PUT /factures/{id}/statut
+PUT /api/factures/{id}/statut
 
-DONNEES A ENVOYER:
+DONNÉES À ENVOYER:
 {
   "statut": "payee"
 }
 
-STATUTS POSSIBLES: "en_attente", "payee", "rejetee"
+STATUTS POSSIBLES: "en attente", "payee", "annulee"
 
 ## 11. Rechercher des factures
-GET /factures/search?q=ABC&statut=en_attente&annee=2025
+GET /api/factures/search?q=ABC&statut=en_attente&annee=2025
 
-PARAMETRES DE RECHERCHE:
-- q : Terme de recherche (reference, client, description)
+PARAMÈTRES DE RECHERCHE:
+- q : Terme de recherche (référence, client, description)
 - statut : Filtrer par statut
-- annee : Filtrer par annee
+- annee : Filtrer par année
 
 ## 12. Factures par client
-GET /factures/client/{clientId}
+GET /api/factures/client/{clientId}
 
-REPONSE: Liste des factures du client
+RÉPONSE: Liste des factures du client
 
 ## 13. Factures par statut
-GET /factures/statut/{statut}
+GET /api/factures/statut/{statut}
 
-REPONSE: Liste des factures avec le statut donne
+RÉPONSE: Liste des factures avec le statut donné
 
-## TYPES DE FACTURES SUPPORTES:
+## TYPES DE FACTURES SUPPORTÉS:
 
-1. Facture classique ("classique") : Facture complete normale
-2. Facture d'acompte ("acompte") : Facture de paiement partiel avec pourcentage
+1. Facture classique ("classique") : Facture complète normale
+2. Facture d'acompte ("acompte") : Facture de paiement partiel
+3. Facture d'avancement ("avancement") : Facture de progression
+4. Facture standard ("standard") : Facture standard
 
-## STRUCTURE COMPLETE D'UNE LIGNE DE FACTURE:
+## STRUCTURE COMPLÈTE D'UNE LIGNE DE FACTURE:
 
 {
-  "designation": "Description du service/produit",
-  "unite": "jour/forfait/piece/heure",
+  "description": "Description du service/produit",
   "quantite": 10.5,
-  "prix_unitaire": 500.00,
-  "tva": 20,
-  "montant_ht": 5250.00,
-  "montant_ttc": 6300.00
+  "prixUnitaire": 500.00,
+  "totalLigne": 5250.00,
+  "tauxTVA": 20.0
 }
 
-## CHAMPS OBLIGATOIRES POUR CREATION:
+## CHAMPS OBLIGATOIRES POUR CRÉATION:
 
-- client_id (obligatoire)
-- description (obligatoire)
-- type_facture (obligatoire: "classique" ou "acompte")
-- date_emission (obligatoire)
-- date_echeance (obligatoire)
+- clientID (obligatoire)
+- typeFacture (obligatoire: "classique", "acompte", "avancement", "standard")
+- dateCreation (obligatoire)
+- dateEcheance (obligatoire)
 - lignes (obligatoire, au moins une ligne)
+- sousTotalHT (obligatoire)
+- totalTTC (obligatoire)
+- tauxTVA (obligatoire)
 
-## CHAMPS OPTIONNELS:
+## GÉNÉRATION AUTOMATIQUE:
 
-- lieu_signature
-- date_signature
-- devis_reference (pour les acomptes)
-- pourcentage_acompte (pour les acomptes)
+- Référence facture (FAC-ANNÉE-XXXX)
+- Statut par défaut ("en attente")
+- Calcul automatique MontantTVA
 
-Toutes ces routes sont testees et fonctionnelles !
+Toutes ces routes sont testées et fonctionnelles !

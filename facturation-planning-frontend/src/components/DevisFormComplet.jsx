@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "../axiosInstance";
-import PDFPreview from "./PDFPreview";
 import { AuthContext } from "../contexts/AuthContext";
 import "../styles/DevisFormComplet.css";
 
@@ -194,29 +193,8 @@ const DevisFormComplet = () => {
 
   const { totalHT, totalTVA, totalTTC } = calculateTotals();
 
-  // Préparer les données pour l'aperçu PDF
-  const getClientData = () => {
-    if (!form.client_id || !clients.length) return {};
-
-    const selectedClient = clients.find(c => c.id === parseInt(form.client_id));
-    return selectedClient ? {
-      client_nom: selectedClient.nom,
-      client_email: selectedClient.email,
-      client_adresse: selectedClient.adresse
-    } : {};
-  };
-
-  const previewData = {
-    ...form,
-    ...getClientData(),
-    lignes: lignes,
-    totalHT,
-    totalTVA,
-    totalTTC
-  };
-
   return (
-    <div className="devis-form-with-preview">
+    <div className="devis-form-container">
       <div className="form-container">
         <div className="devis-form">
           <h2>Créer un devis complet</h2>
@@ -402,10 +380,6 @@ const DevisFormComplet = () => {
             </div>
           </form>
         </div>
-      </div>
-
-      <div className="preview-container">
-        <PDFPreview data={previewData} type="devis" />
       </div>
     </div>
   );

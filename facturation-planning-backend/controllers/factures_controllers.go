@@ -30,6 +30,7 @@ type LigneFacture struct {
 // FacturePDFData structure pour les données du template PDF
 type FacturePDFData struct {
 	Reference       string
+	Numero          string // Alias pour Reference pour compatibilité template devis
 	Ville           string
 	DateEmission    string
 	DateEcheance    string
@@ -90,7 +91,7 @@ func CreateFacture(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-		// log supprimé
+	// log supprimé
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(facture)
@@ -116,36 +117,38 @@ func CreateFactureFromDevis(w http.ResponseWriter, r *http.Request) {
 	}
 
 	facture := models.Facture{
-		Reference:        generateFactureNumber(),
-		ClientID:         devis.ClientID,
-		Client:           devis.Client,
-		ClientNom:        devis.Client.Nom,
-		ClientAdresse:    devis.Client.Adresse,
-		ClientEmail:      devis.Client.Email,
-		ClientTelephone:  devis.Client.Telephone,
-		DateEmission:     time.Now(),
-		DateEcheance:     time.Now().AddDate(0, 0, 30),
-		Description:      devis.Objet,
-		TypeFacture:      "classique",
-		SousTotalHT:      devis.SousTotalHT,
-		TotalTVA:         devis.TotalTVA,
-		TotalTTC:         devis.TotalTTC,
-		Statut:           "en_attente",
-		LieuSignature:    devis.LieuSignature,
-		DateSignature:    devis.DateSignature,
-		EntrepriseID:     devis.EntrepriseID,
-		DevisReference:   fmt.Sprintf("DEV-%04d", devis.ID),
+		Reference:       generateFactureNumber(),
+		ClientID:        devis.ClientID,
+		Client:          devis.Client,
+		ClientNom:       devis.Client.Nom,
+		ClientAdresse:   devis.Client.Adresse,
+		ClientEmail:     devis.Client.Email,
+		ClientTelephone: devis.Client.Telephone,
+		DateCreation:    time.Now(),
+		DateEmission:    time.Now(),
+		DateEcheance:    time.Now().AddDate(0, 0, 30),
+		Description:     devis.Objet,
+		TypeFacture:     "classique",
+		SousTotalHT:     devis.SousTotalHT,
+		TotalTVA:        devis.TotalTVA,
+		TotalTTC:        devis.TotalTTC,
+		Statut:          "en attente",
+		LieuSignature:   devis.LieuSignature,
+		DateSignature:   devis.DateSignature,
+		EntrepriseID:    devis.EntrepriseID,
+		DevisReference:  fmt.Sprintf("DEV-%04d", devis.ID),
 	}
 
 	// Copier les lignes du devis dans la facture
 	for _, ligne := range devis.Lignes {
 		facture.Lignes = append(facture.Lignes, models.LigneFacture{
-			Designation:  ligne.Description,
+			Description:  ligne.Description,
 			Unite:        "unité",
 			Quantite:     float64(ligne.Quantite),
 			PrixUnitaire: ligne.PrixUnitaire,
+			TotalLigne:   ligne.PrixUnitaire * float64(ligne.Quantite),
+			TauxTVA:      ligne.TVA,
 			MontantHT:    ligne.PrixUnitaire * float64(ligne.Quantite),
-			TVA:          ligne.TVA,
 			MontantTTC:   ligne.PrixUnitaire * float64(ligne.Quantite) * (1 + ligne.TVA/100),
 		})
 	}
@@ -296,9 +299,9 @@ func GenerateFacturePDF(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Choisir le template selon le type de facture
-	templateName := "facture.html"
+	templateName := "facture_final.html"
 	if facture.TypeFacture == "acompte" {
-		templateName = "facture_acompte.html"
+		templateName = "facture_final.html" // même template avec mention du type
 	}
 
 	tmpl, err := template.New(templateName).Funcs(funcMap).ParseFiles("templates/" + templateName)
@@ -655,10 +658,12 @@ func prepareFacturePDFData(facture models.Facture) FacturePDFData {
 	var dateEmission, dateEcheance string
 	if !facture.DateEmission.IsZero() {
 		dateEmission = facture.DateEmission.Format("02 janvier 2006")
+	} else if !facture.DateCreation.IsZero() {
+		dateEmission = facture.DateCreation.Format("02 janvier 2006")
 	} else {
 		dateEmission = time.Now().Format("02 janvier 2006")
 	}
-	
+
 	if !facture.DateEcheance.IsZero() {
 		dateEcheance = facture.DateEcheance.Format("02 janvier 2006")
 	} else {
@@ -688,18 +693,19 @@ func prepareFacturePDFData(facture models.Facture) FacturePDFData {
 	var lignes []LigneFacture
 	for _, ligne := range facture.Lignes {
 		lignes = append(lignes, LigneFacture{
-			Designation:  ligne.Designation,
+			Designation:  ligne.Description,
 			Unite:        ligne.Unite,
 			Quantite:     ligne.Quantite,
 			PrixUnitaire: ligne.PrixUnitaire,
 			MontantHT:    ligne.MontantHT,
-			TVA:          ligne.TVA,
+			TVA:          ligne.TauxTVA,
 			MontantTTC:   ligne.MontantTTC,
 		})
 	}
 
 	return FacturePDFData{
 		Reference:       facture.Reference,
+		Numero:          facture.Reference, // Alias pour compatibilité
 		Ville:           devisConfig.DefaultCity,
 		DateEmission:    dateEmission,
 		DateEcheance:    dateEcheance,
@@ -722,10 +728,12 @@ func prepareFacturePDFData(facture models.Facture) FacturePDFData {
 
 // validateFactureData valide les données d'une facture
 func validateFactureData(facture *models.Facture) error {
-	// Vérifier que l'entreprise existe
-	var entreprise models.Entreprise
-	if err := config.DB.First(&entreprise, facture.EntrepriseID).Error; err != nil {
-		return fmt.Errorf("entreprise introuvable")
+	// Vérifier que l'entreprise existe seulement si l'ID n'est pas 0
+	if facture.EntrepriseID != 0 {
+		var entreprise models.Entreprise
+		if err := config.DB.First(&entreprise, facture.EntrepriseID).Error; err != nil {
+			return fmt.Errorf("entreprise introuvable")
+		}
 	}
 
 	// Vérifier le type de facture
@@ -754,9 +762,22 @@ func validateFactureData(facture *models.Facture) error {
 func generateFactureNumber() string {
 	year := time.Now().Year()
 
-	// Compter les factures de l'année (syntaxe PostgreSQL)
-	var count int64
-	config.DB.Model(&models.Facture{}).Where("EXTRACT(YEAR FROM created_at) = ?", year).Count(&count)
+	// Rechercher la dernière référence de l'année pour éviter les doublons
+	var maxNumber int = 0
 
-	return fmt.Sprintf("FAC-%d-%04d", year, count+1)
+	// Chercher toutes les factures de l'année et extraire le plus grand numéro
+	var factures []models.Facture
+	config.DB.Where("reference LIKE ?", fmt.Sprintf("FAC-%d-%%", year)).Find(&factures)
+
+	for _, facture := range factures {
+		// Extraire le numéro de la référence (format: FAC-2025-XXXX)
+		var num int
+		if _, err := fmt.Sscanf(facture.Reference, "FAC-%d-%d", &year, &num); err == nil {
+			if num > maxNumber {
+				maxNumber = num
+			}
+		}
+	}
+
+	return fmt.Sprintf("FAC-%d-%04d", year, maxNumber+1)
 }

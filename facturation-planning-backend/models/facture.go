@@ -7,17 +7,18 @@ import (
 // LigneFacture représente une ligne dans une facture
 type LigneFacture struct {
 	ID           uint       `json:"id" gorm:"primaryKey"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
-	DeletedAt    *time.Time `json:"deleted_at,omitempty" gorm:"index"`
-	FactureID    uint       `json:"facture_id"`
-	Designation  string     `json:"designation" example:"Développement site web"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	DeletedAt    *time.Time `json:"deletedAt,omitempty" gorm:"index"`
+	FactureID    uint       `json:"factureID"`
+	Description  string     `json:"description" example:"Développement site web"`
 	Unite        string     `json:"unite" example:"jour"`
 	Quantite     float64    `json:"quantite" example:"10"`
-	PrixUnitaire float64    `json:"prix_unitaire" example:"500.00"`
-	MontantHT    float64    `json:"montant_ht" example:"5000.00"`
-	TVA          float64    `json:"tva" example:"20"`
-	MontantTTC   float64    `json:"montant_ttc" example:"6000.00"`
+	PrixUnitaire float64    `json:"prixUnitaire" example:"500.00"`
+	TotalLigne   float64    `json:"totalLigne" example:"5000.00"`
+	TauxTVA      float64    `json:"tauxTVA" example:"20"`
+	MontantHT    float64    `json:"montantHT" example:"5000.00"`
+	MontantTTC   float64    `json:"montantTTC" example:"6000.00"`
 }
 
 // Facture représente une facture générée
@@ -32,40 +33,43 @@ type Facture struct {
 	Reference string `json:"reference" gorm:"unique;not null" example:"FAC-2025-001"`
 
 	// Informations client
-	ClientID        uint   `json:"client_id" gorm:"not null" example:"1"`
+	ClientID        uint   `json:"clientID" gorm:"not null" example:"1"`
 	Client          Client `json:"client" gorm:"foreignKey:ClientID"`
-	ClientNom       string `json:"client_nom" example:"Entreprise ABC"`
-	ClientAdresse   string `json:"client_adresse" example:"123 Rue de la Paix, 75001 Paris"`
-	ClientEmail     string `json:"client_email" example:"contact@abc.com"`
-	ClientTelephone string `json:"client_telephone" example:"01 23 45 67 89"`
+	ClientNom       string `json:"clientNom" example:"Entreprise ABC"`
+	ClientAdresse   string `json:"clientAdresse" example:"123 Rue de la Paix, 75001 Paris"`
+	ClientEmail     string `json:"clientEmail" example:"contact@abc.com"`
+	ClientTelephone string `json:"clientTelephone" example:"01 23 45 67 89"`
 
 	// Dates
-	DateEmission time.Time `json:"date_emission" example:"2025-03-17T00:00:00Z"`
-	DateEcheance time.Time `json:"date_echeance" example:"2025-04-17T00:00:00Z"`
+	DateCreation time.Time `json:"dateCreation" example:"2025-03-17T00:00:00Z"`
+	DateEmission time.Time `json:"dateEmission" example:"2025-03-17T00:00:00Z"`
+	DateEcheance time.Time `json:"dateEcheance" example:"2025-04-17T00:00:00Z"`
 
 	// Contenu
 	Description string `json:"description" example:"Développement site web"`
-	TypeFacture string `json:"type_facture" example:"classique"` // "classique" ou "acompte"
+	TypeFacture string `json:"typeFacture" example:"classique"` // "classique" ou "acompte"
 
 	// Montants
-	SousTotalHT float64 `json:"sous_total_ht" example:"1000.00"`
-	TotalTVA    float64 `json:"total_tva" example:"200.00"`
-	TotalTTC    float64 `json:"total_ttc" example:"1200.00"`
+	SousTotalHT float64 `json:"sousTotalHT" example:"1000.00"`
+	TotalTVA    float64 `json:"totalTVA" example:"200.00"`
+	TotalTTC    float64 `json:"totalTTC" example:"1200.00"`
+	TauxTVA     float64 `json:"tauxTVA" example:"20.0"`
+	MontantTVA  float64 `json:"montantTVA" example:"200.00"`
 
 	// Statut et workflow
 	Statut string `json:"statut" example:"en_attente"` // "en_attente", "payee", "rejetee"
 
 	// Informations de signature
-	LieuSignature string `json:"lieu_signature" example:"Paris"`
-	DateSignature string `json:"date_signature" example:"17/03/2025"`
+	LieuSignature string `json:"lieuSignature" example:"Paris"`
+	DateSignature string `json:"dateSignature" example:"17/03/2025"`
 
 	// Champs optionnels pour les acomptes
-	DevisReference     string `json:"devis_reference,omitempty" example:"DEV-2025-001"`
-	PourcentageAcompte int    `json:"pourcentage_acompte,omitempty" example:"50"`
+	DevisReference     string `json:"devisReference,omitempty" example:"DEV-2025-001"`
+	PourcentageAcompte int    `json:"pourcentageAcompte,omitempty" example:"50"`
 
 	// Legacy fields (pour compatibilité)
-	EntrepriseID uint  `json:"entreprise_id,omitempty" example:"5"`
-	PlanningID   *uint `json:"planning_id,omitempty" example:"3"`
+	EntrepriseID uint  `json:"entrepriseID,omitempty" example:"5"`
+	PlanningID   *uint `json:"planningID,omitempty" example:"3"`
 
 	// Relations
 	Lignes []LigneFacture `json:"lignes" gorm:"foreignKey:FactureID"`
