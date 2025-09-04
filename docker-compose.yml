@@ -41,7 +41,6 @@ services:
     env_file: .env
     volumes:
       - webdist:/usr/share/web
-    command: ["sh", "-c", "rm -rf /usr/share/web/* && cp -r /app/dist/* /usr/share/web/ && sleep infinity"]
     depends_on:
       - api
 

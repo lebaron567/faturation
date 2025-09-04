@@ -8,13 +8,13 @@ import (
 
 	"facturation-planning/config"
 	"facturation-planning/database"
+	"facturation-planning/middlewares"
 	"facturation-planning/models"
 	"facturation-planning/routes"
 
 	_ "facturation-planning/docs" // Import des docs générées
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -43,15 +43,8 @@ func main() {
 	// 🔥 Créer un nouveau routeur Chi
 	r := chi.NewRouter()
 
-	// ✅ Ajouter CORS **AVANT** d'enregistrer les routes
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300,
-	}))
+	// ✅ Configuration CORS avec middleware dédié
+	r.Use(middlewares.CORSMiddleware())
 
 	// ✅ Enregistrer les routes après avoir défini les middlewares
 	r.Mount("/", routes.SetupRoutes())
