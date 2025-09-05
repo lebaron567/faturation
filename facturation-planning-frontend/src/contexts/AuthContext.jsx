@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import authService from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Vérifier la validité du token
+    // Vérifier la validité du token avec le service
     const isTokenValid = (token) => {
         if (!token) return false;
 
@@ -29,25 +30,36 @@ export const AuthProvider = ({ children }) => {
 
             // Vérifier si le token n'est pas expiré
             if (decoded.exp && decoded.exp < currentTime) {
+                console.warn('🕐 Token JWT expiré');
                 return false;
             }
 
             return true;
         } catch (error) {
-            console.error('Erreur lors du décodage du token:', error);
+            console.error('❌ Erreur lors du décodage du token:', error);
             return false;
         }
     };
 
-    // Fonction de connexion
-    const login = (token, userData) => {
-        if (isTokenValid(token)) {
-            localStorage.setItem('token', token);
-            setIsAuthenticated(true);
-            setUser(userData);
-            return true;
+    // Fonction de connexion avec le service d'authentification
+    const login = async (email, password) => {
+        try {
+            console.log('🔐 Tentative de connexion via AuthContext...');
+            const result = await authService.login(email, password);
+
+            if (result.token) {
+                console.log('🔑 Token reçu, mise à jour du contexte...');
+                setIsAuthenticated(true);
+                setUser(result.user);
+                console.log('✅ Connexion réussie via AuthContext');
+                return true;
+            }
+            console.warn('⚠️ Pas de token dans la réponse');
+            return false;
+        } catch (error) {
+            console.error('❌ Erreur de connexion dans AuthContext:', error);
+            return false;
         }
-        return false;
     };
 
     // Fonction de déconnexion

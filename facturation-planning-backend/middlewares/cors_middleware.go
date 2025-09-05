@@ -12,10 +12,10 @@ import (
 func GetCORSOptions() cors.Options {
 	// Origines autorisées par défaut (développement)
 	allowedOrigins := []string{
-		"http://localhost:3000",     // React dev server
-		"http://localhost:3001",     // Alternative React port
-		"http://127.0.0.1:3000",     // Alternative localhost
-		"http://0.0.0.0:3000",       // Docker frontend
+		"http://localhost:3000", // React dev server
+		"http://localhost:3001", // Alternative React port
+		"http://127.0.0.1:3000", // Alternative localhost
+		"http://0.0.0.0:3000",   // Docker frontend
 	}
 
 	// Ajouter les origines personnalisées depuis les variables d'environnement
@@ -67,7 +67,7 @@ func GetCORSOptions() cors.Options {
 			"X-Total-Count",
 		},
 		AllowCredentials: true,
-		MaxAge:           300, // 5 minutes en développement pour faciliter les tests
+		MaxAge:           300,  // 5 minutes en développement pour faciliter les tests
 		Debug:            true, // Logs CORS en développement
 	}
 }

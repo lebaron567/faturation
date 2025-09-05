@@ -8,6 +8,10 @@ import FactureManager from "./components/FactureManager";
 import FactureFormComplet from "./components/FactureFormComplet";
 import FactureDetails from "./components/FactureDetails";
 import Planning from "./components/Planning/index";
+import PlanningTest from "./components/PlanningTest"; // Nouveau composant de test
+import JWTDiagnostic from "./components/JWTDiagnostic"; // Diagnostic JWT
+import LoginDebug from "./components/LoginDebug"; // Debug de connexion
+import SimpleLogin from "./components/SimpleLogin"; // Test de connexion simple
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Header from "./components/Header";
@@ -34,7 +38,7 @@ function AppContent() {
   useKeyboardShortcuts(isAuthenticated);
 
   // Déterminer si nous sommes sur la page de planning
-  const isPlanningPage = location.pathname === '/planning';
+  const isPlanningPage = location.pathname === '/planning' || location.pathname === '/planning-test' || location.pathname === '/jwt-diagnostic';
 
   return (
     <div className={`app-layout ${sidebarCollapsed ? "collapsed" : ""} ${isPlanningPage ? "planning-layout" : ""}`}>
@@ -49,10 +53,21 @@ function AppContent() {
           toggleSidebar={() => setSidebarCollapsed(prev => !prev)}
         />
         <Routes>
+          {/* Routes publiques */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/login-debug" element={<LoginDebug />} />
+          <Route path="/simple-login" element={<SimpleLogin />} />
 
           {/* Routes protégées */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/clients/ajouter"
             element={
@@ -65,15 +80,15 @@ function AppContent() {
             path="/devis"
             element={
               <ProtectedRoute>
-                <DevisFormComplet />
+                <DevisManager />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/devis/manager"
+            path="/devis/creer"
             element={
               <ProtectedRoute>
-                <DevisManager />
+                <DevisFormComplet />
               </ProtectedRoute>
             }
           />
@@ -82,6 +97,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <DevisDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/:id/edit"
+            element={
+              <ProtectedRoute>
+                <DevisFormComplet />
               </ProtectedRoute>
             }
           />
@@ -134,6 +157,22 @@ function AppContent() {
             }
           />
           <Route
+            path="/planning-test"
+            element={
+              <ProtectedRoute>
+                <PlanningTest />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jwt-diagnostic"
+            element={
+              <ProtectedRoute>
+                <JWTDiagnostic />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/salarie/ajouter"
             element={
               <ProtectedRoute>
@@ -146,14 +185,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <GestionDocuments />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
               </ProtectedRoute>
             }
           />

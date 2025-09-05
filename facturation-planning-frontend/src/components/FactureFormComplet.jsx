@@ -119,8 +119,8 @@ const FactureFormComplet = () => {
                 clientID: parseInt(devisData.client_id),
                 typeFacture: "classique",
                 dateCreation: new Date().toISOString(),
-                dateEcheance: form.date_echeance ? 
-                    new Date(form.date_echeance + "T00:00:00.000Z").toISOString() : 
+                dateEcheance: form.date_echeance ?
+                    new Date(form.date_echeance + "T00:00:00.000Z").toISOString() :
                     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 sousTotalHT: montantHT,
                 totalTTC: montantTTC,

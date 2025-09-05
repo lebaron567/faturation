@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "../axiosInstance";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "../styles/Login.css";
@@ -23,22 +22,30 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:8080/login", form);
+      // Utiliser la fonction login du contexte
+      const success = await login(form.email, form.password);
 
-      if (response.data.token) {
-        const success = login(response.data.token, response.data.user);
+      if (success) {
+        console.log('✅ Connexion réussie - Redirection en cours');
 
-        if (success) {
-          navigate(from, { replace: true });
-        } else {
-          alert("⚠️ Token invalide !");
-        }
+        // Rediriger vers la page demandée
+        navigate(from, { replace: true });
       } else {
-        alert("⚠️ Aucun token reçu !");
+        alert("⚠️ Erreur de connexion - Identifiants incorrects");
       }
     } catch (error) {
       console.error("❌ Erreur de connexion :", error.response?.data || error.message);
-      alert("❌ Connexion échouée !");
+
+      let errorMessage = "❌ Connexion échouée !";
+      if (error.response?.status === 401) {
+        errorMessage = "❌ Email ou mot de passe incorrect";
+      } else if (error.response?.status === 500) {
+        errorMessage = "❌ Erreur serveur - Réessayez plus tard";
+      } else if (error.code === 'NETWORK_ERROR') {
+        errorMessage = "❌ Problème de connexion - Vérifiez que le serveur est démarré";
+      }
+
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
