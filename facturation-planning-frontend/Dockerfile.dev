@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+
+# Installer toutes les dépendances (dev + prod)
+RUN npm install
+
+# Copier le code source
+COPY . .
+
+# Exposer le port de développement
+EXPOSE 3000
+
+# Variables d'environnement pour le développement
+ENV NODE_ENV=development
+ENV REACT_APP_API_URL=http://localhost:8080
+
+# Démarrer le serveur de développement
+CMD ["npm", "start"]

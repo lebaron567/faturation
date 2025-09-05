@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"  # Exposé pour debug
+    volumes:
+      - dbdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build:
+      context: ./facturation-planning-backend
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      DB_DSN: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable"
+      PORT: "8080"
+      ENV: "development"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"  # Exposé pour debug
+    volumes:
+      - ./facturation-planning-backend/templates:/app/templates
+      - ./facturation-planning-backend/assets:/app/assets
+    restart: unless-stopped
+
+  # Frontend en mode développement avec hot reload
+  frontend-dev:
+    build:
+      context: ./facturation-planning-frontend
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./facturation-planning-frontend/src:/app/src
+      - ./facturation-planning-frontend/public:/app/public
+    depends_on:
+      - api
+
+volumes:
+  dbdata_dev:
