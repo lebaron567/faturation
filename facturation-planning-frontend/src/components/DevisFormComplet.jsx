@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "../axiosInstance";
 import { AuthContext } from "../contexts/AuthContext";
+import { getClientSelectLabel } from "../utils/clientUtils";
 import "../styles/DevisFormComplet.css";
 
 const DevisFormComplet = () => {
@@ -230,7 +231,7 @@ const DevisFormComplet = () => {
                   ) : (
                     clients.map((client) => (
                       <option key={client.id} value={client.id}>
-                        {client.nom} ({client.email}) - ID: {client.id} - Entreprise: {client.entreprise_id}
+                        {getClientSelectLabel(client)} - ID: {client.id} - Entreprise: {client.entreprise_id}
                       </option>
                     ))
                   )}

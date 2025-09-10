@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../axiosInstance";
+import { getClientSelectLabel, getClientDisplayName } from "../utils/clientUtils";
 import "../styles/FactureFormComplet.css";
 
 const FactureFormComplet = () => {
@@ -92,7 +93,7 @@ const FactureFormComplet = () => {
             setForm(prev => ({
                 ...prev,
                 client_id: value,
-                client_nom: selectedClient ? selectedClient.nom : ""
+                client_nom: selectedClient ? getClientDisplayName(selectedClient) : ""
             }));
         } else {
             setForm(prev => ({
@@ -356,7 +357,7 @@ const FactureFormComplet = () => {
                                 <option value="">-- Sélectionner un client --</option>
                                 {clients.map((client) => (
                                     <option key={client.id} value={client.id}>
-                                        {client.nom} ({client.email})
+                                        {getClientSelectLabel(client)}
                                     </option>
                                 ))}
                             </select>

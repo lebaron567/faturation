@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import axios from "../axiosInstance";
+import { getClientSelectLabel } from "../utils/clientUtils";
 import "../styles/FactureManager.css";
 
 const FactureManager = () => {
@@ -205,7 +206,7 @@ const FactureManager = () => {
                         <option value="">Tous les clients</option>
                         {clients.map((client) => (
                             <option key={client.id} value={client.id}>
-                                {client.nom}
+                                {getClientSelectLabel(client)}
                             </option>
                         ))}
                     </select>

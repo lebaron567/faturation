@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "../axiosInstance";
+import { getClientDisplayName } from "../utils/clientUtils";
 import "../styles/ListeDevis.css";
 
 const ListeDevis = () => {
@@ -133,7 +134,7 @@ const ListeDevis = () => {
               </div>
 
               <div className="devis-info">
-                <p><strong>Client :</strong> {devis.Client?.nom || devis.client_nom}</p>
+                <p><strong>Client :</strong> {getClientDisplayName(devis.Client) || devis.client_nom || "Client inconnu"}</p>
                 <p><strong>Date :</strong> {new Date(devis.date_devis).toLocaleDateString()}</p>
                 <p><strong>Date d'expiration :</strong> {new Date(devis.date_expiration).toLocaleDateString()}</p>
                 <p><strong>Lignes :</strong> {devis.lignes?.length || 0}</p>

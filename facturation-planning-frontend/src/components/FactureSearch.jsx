@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../axiosInstance';
 import '../styles/FactureSearch.css';
+import { getClientSelectLabel } from '../utils/clientUtils';
 
 const FactureSearch = ({ onResults, onReset }) => {
     const [searchParams, setSearchParams] = useState({
@@ -121,7 +122,7 @@ const FactureSearch = ({ onResults, onReset }) => {
                                 <option value="">Tous les clients</option>
                                 {clients.map(client => (
                                     <option key={client.id} value={client.id}>
-                                        {client.nom}
+                                        {getClientSelectLabel(client)}
                                     </option>
                                 ))}
                             </select>

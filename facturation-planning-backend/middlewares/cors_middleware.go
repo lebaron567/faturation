@@ -12,6 +12,8 @@ import (
 func GetCORSOptions() cors.Options {
 	// Origines autorisées par défaut (développement)
 	allowedOrigins := []string{
+		"http://localhost",      // Frontend via Caddy proxy
+		"http://localhost:80",   // Explicit port 80
 		"http://localhost:3000", // React dev server
 		"http://localhost:3001", // Alternative React port
 		"http://127.0.0.1:3000", // Alternative localhost

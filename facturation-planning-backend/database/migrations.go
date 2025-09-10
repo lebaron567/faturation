@@ -22,6 +22,11 @@ func MigrateDB() {
 		return
 	}
 
+	// Migration spécifique pour les clients (transformation des données existantes)
+	if err := migrateClientsData(); err != nil {
+		fmt.Println("❌ Erreur lors de la migration des clients :", err)
+	}
+
 	// Étape 2 : Migrer les tables avec dépendances simples
 	fmt.Println("🔄 Migration des tables avec dépendances...")
 	err = config.DB.AutoMigrate(
@@ -58,6 +63,32 @@ func MigrateDB() {
 	}
 
 	fmt.Println("✅ Migration réussie !")
+}
+
+// migrateClientsData migre les données existantes des clients vers le nouveau format
+func migrateClientsData() error {
+	fmt.Println("🔄 Migration des données clients...")
+
+	// Vérifier si la colonne type_client existe déjà
+	if !config.DB.Migrator().HasColumn(&models.Client{}, "type_client") {
+		fmt.Println("⚠️  Colonne type_client manquante, elle sera créée automatiquement")
+		return nil
+	}
+
+	// Mettre à jour tous les clients existants sans type_client
+	result := config.DB.Model(&models.Client{}).
+		Where("type_client IS NULL OR type_client = ''").
+		Update("type_client", "professionnel")
+
+	if result.Error != nil {
+		return fmt.Errorf("erreur lors de la mise à jour des clients existants : %v", result.Error)
+	}
+
+	if result.RowsAffected > 0 {
+		fmt.Printf("✅ %d clients existants mis à jour en tant que 'professionnel'\n", result.RowsAffected)
+	}
+
+	return nil
 }
 
 // CleanDevisData nettoie les données et tables devis - ATTENTION: Supprime toutes les données devis !
@@ -115,12 +146,24 @@ func createTestData() error {
 		}
 
 		// Créer un client de test
+		nomOrganisme := "Entreprise Test SARL"
+		adresse := "456 Avenue de la République"
+		complementAdresse := "Bâtiment B"
+		codePostal := "44000"
+		ville := "Nantes"
+		email := "contact@entreprise-test.fr"
+		telephone := "02 40 98 76 54"
+
 		client := models.Client{
-			Nom:          "Entreprise Test SARL",
-			Adresse:      "456 Avenue de la République\n44000 Nantes",
-			Email:        "contact@entreprise-test.fr",
-			Telephone:    "02 40 98 76 54",
-			EntrepriseID: entreprise.ID,
+			TypeClient:        "professionnel",
+			NomOrganisme:      &nomOrganisme,
+			Adresse:           adresse,
+			ComplementAdresse: complementAdresse,
+			CodePostal:        codePostal,
+			Ville:             ville,
+			Email:             email,
+			Telephone:         telephone,
+			EntrepriseID:      entreprise.ID,
 		}
 
 		if err := config.DB.Create(&client).Error; err != nil {

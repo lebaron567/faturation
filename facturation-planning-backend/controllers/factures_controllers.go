@@ -120,7 +120,7 @@ func CreateFactureFromDevis(w http.ResponseWriter, r *http.Request) {
 		Reference:       generateFactureNumber(),
 		ClientID:        devis.ClientID,
 		Client:          devis.Client,
-		ClientNom:       devis.Client.Nom,
+		ClientNom:       devis.Client.GetDisplayName(),
 		ClientAdresse:   devis.Client.Adresse,
 		ClientEmail:     devis.Client.Email,
 		ClientTelephone: devis.Client.Telephone,
@@ -683,7 +683,7 @@ func prepareFacturePDFData(facture models.Facture) FacturePDFData {
 	// Informations client
 	var clientNom, clientAdresse, clientEmail, clientTelephone string
 	if facture.Client.ID != 0 {
-		clientNom = facture.Client.Nom
+		clientNom = facture.Client.GetDisplayName()
 		clientAdresse = facture.Client.Adresse
 		clientEmail = facture.Client.Email
 		clientTelephone = facture.Client.Telephone

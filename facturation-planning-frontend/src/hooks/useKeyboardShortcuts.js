@@ -24,7 +24,7 @@ export const useKeyboardShortcuts = (isAuthenticated) => {
                         break;
                     case 'd':
                         event.preventDefault();
-                        if (isAuthenticated) navigate('/devis');
+                        if (isAuthenticated) navigate('/devis/creer');
                         break;
                     case 'm':
                         event.preventDefault();
@@ -70,7 +70,7 @@ export const useKeyboardShortcuts = (isAuthenticated) => {
         shortcuts: [
             { key: 'Ctrl + H', description: 'Accueil', path: '/' },
             { key: 'Ctrl + P', description: 'Planning', path: '/planning' },
-            { key: 'Ctrl + D', description: 'Créer un devis', path: '/devis' },
+            { key: 'Ctrl + D', description: 'Créer un devis', path: '/devis/creer' },
             { key: 'Ctrl + M', description: 'Gérer les devis', path: '/devis/manager' },
             { key: 'Ctrl + F', description: 'Factures', path: '/factures' },
             { key: 'Ctrl + C', description: 'Nouveau client', path: '/clients/ajouter' },

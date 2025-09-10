@@ -46,13 +46,23 @@ func SetupRoutes() *chi.Mux {
 	r.Get("/entreprises/{id}/devis", controllers.GetDevisByEntreprise)
 	r.Get("/clients/{id}/devis", controllers.GetDevisByClient)
 
-	// Plannings
+	// Types d'événements (endpoint public)
+	r.Get("/plannings/types-evenements", controllers.GetTypesEvenements)
+
+	// Plannings (endpoints protégés)
 	r.Route("/plannings", func(r chi.Router) {
 		r.Use(middlewares.JWTMiddleware)
 		r.Get("/", controllers.GetPlannings)
 		r.Post("/", controllers.CreatePlanning)
 		r.Put("/{id}", controllers.UpdatePlanning)
 		r.Delete("/{id}", controllers.DeletePlanning)
+	})
+
+	// Facturation mensuelle (endpoints protégés)
+	r.Route("/facturation-mensuelle", func(r chi.Router) {
+		r.Use(middlewares.JWTMiddleware)
+		r.Post("/preview", controllers.GetFacturationMensuellePreview)
+		r.Post("/create", controllers.CreateFacturationMensuelle)
 	})
 
 	return r

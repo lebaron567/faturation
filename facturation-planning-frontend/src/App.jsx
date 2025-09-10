@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthErrorHandler from "./components/AuthErrorHandler";
@@ -23,6 +23,7 @@ import DevisFormComplet from "./components/DevisFormComplet";
 import ListeDevis from "./components/ListeDevis";
 import DevisDetails from "./components/DevisDetails";
 import DevisManager from "./components/DevisManager";
+import FacturationMensuelle from "./components/FacturationMensuelle";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -78,6 +79,14 @@ function AppContent() {
           />
           <Route
             path="/devis"
+            element={
+              <ProtectedRoute>
+                <DevisManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/manager"
             element={
               <ProtectedRoute>
                 <DevisManager />
@@ -149,6 +158,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/facturation-mensuelle"
+            element={
+              <ProtectedRoute>
+                <FacturationMensuelle />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/planning"
             element={
               <ProtectedRoute>
@@ -185,6 +202,16 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <GestionDocuments />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Route par défaut - redirige vers la page d'accueil si authentifié, sinon vers login */}
+          <Route
+            path="*"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/" replace />
               </ProtectedRoute>
             }
           />

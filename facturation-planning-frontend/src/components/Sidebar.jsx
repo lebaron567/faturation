@@ -18,10 +18,11 @@ const Sidebar = ({ collapsed, toggleSidebar, isPlanningPage }) => {
     {
       section: "💼 Gestion commerciale",
       items: [
-        { path: "/devis", label: " Créer un devis", icon: "➕" },
+        { path: "/devis/creer", label: " Créer un devis", icon: "➕" },
         { path: "/devis/manager", label: " Gérer les devis", icon: "📋" },
         { path: "/factures/creer", label: " Créer une facture", icon: "➕" },
         { path: "/factures", label: " Gérer les factures", icon: "📊" },
+        { path: "/facturation-mensuelle", label: " Facturation mensuelle", icon: "💰" },
         { path: "/documents", label: " Documents", icon: "📁" }
       ]
     },

@@ -1,5 +1,5 @@
 # Étape 1: Build de l'application Go
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Installer git pour télécharger les dépendances
 RUN apk add --no-cache git
@@ -22,9 +22,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 # Étape 2: Image finale
 FROM alpine:latest
 
-# Installer wkhtmltopdf pour la génération PDF et autres outils
-RUN apk --no-cache add ca-certificates xvfb ttf-dejavu wget fontconfig \
-    && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community wkhtmltopdf \
+# Installer les outils nécessaires (sans wkhtmltopdf pour l'instant)
+RUN apk --no-cache add ca-certificates wget fontconfig ttf-dejavu \
     && fc-cache -fv
 
 # Définir le répertoire de travail

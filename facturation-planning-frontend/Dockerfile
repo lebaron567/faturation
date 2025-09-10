@@ -19,6 +19,7 @@ COPY . .
 ENV NODE_ENV=production
 ENV GENERATE_SOURCEMAP=false
 ENV INLINE_RUNTIME_CHUNK=false
+ENV REACT_APP_API_URL=http://localhost/api
 
 # Builder l'application React pour la production
 RUN npm run build

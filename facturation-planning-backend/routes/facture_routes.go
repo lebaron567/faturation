@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func FactureRoutes(r *chi.Mux) {
+func FactureRoutes(r chi.Router) {
 	// CRUD operations
 	r.Post("/factures", controllers.CreateFacture)
 	r.Post("/factures/from-devis/{devisId}", controllers.CreateFactureFromDevis)

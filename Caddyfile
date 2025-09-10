@@ -1,55 +1,27 @@
-# Production – domaine principal
-{$APP_DOMAIN} {
-    # Logs
-    log {
-        output stdout
-        level INFO
-    }
-
-    encode zstd gzip
-
-    # Headers sécurité
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-    }
-
-    # ---- API (sans préfixe /api)
-    @api path /auth* /devis* /clients* /factures* /plannings* /entreprises* /salaries* /profile*
-    handle @api {
-        reverse_proxy api:8080 {
-            # Caddy gère déjà X-Forwarded-For/Proto ;
-            # ces lignes sont optionnelles :
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-        }
-    }
-
-    # ---- SPA (React)
-    root * /usr/share/web
-    try_files {path} /index.html
-    file_server
-}
-
-# Dév local (HTTP)
-localhost {
+http://localhost {
+    # Logs pour debug
     log {
         output stdout
         level DEBUG
     }
-    encode zstd gzip
-
-    @api path /auth* /devis* /clients* /factures* /plannings* /entreprises* /salaries* /profile*
-    handle @api {
+    
+    # Routes API - tout ce qui commence par /api va vers le backend
+    handle /api/* {
+        uri strip_prefix /api
         reverse_proxy api:8080
     }
-
-    root * /usr/share/web
-    try_files {path} /index.html
-    file_server
+    
+    # Frontend React - tout le reste
+    handle {
+        root * /usr/share/web
+        try_files {path} /index.html
+        file_server
+    }
+    
+    encode gzip
+    
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+    }
 }

@@ -7,10 +7,8 @@ import (
 	"facturation-planning/models"
 	"fmt"
 	"html/template"
-	"io"
 	"net/http"
 
-	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -221,7 +219,7 @@ func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 	// Génération de l'objet du devis
 	objet := devis.Objet
 	if objet == "" {
-		objet = fmt.Sprintf("Devis pour %s", devis.Client.Nom)
+		objet = fmt.Sprintf("Devis pour %s", devis.Client.GetDisplayName())
 	}
 
 	// Informations de l'entreprise
@@ -233,7 +231,7 @@ func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 		Ville:           devisConfig.DefaultCity,
 		DateEdition:     dateEdition,
 		DateExpiration:  dateExpiration,
-		ClientNom:       devis.Client.Nom,
+		ClientNom:       devis.Client.GetDisplayName(),
 		ClientAdresse:   devis.Client.Adresse,
 		ClientEmail:     devis.Client.Email,
 		ClientTelephone: devis.Client.Telephone,
@@ -271,33 +269,11 @@ func GenerateDevisPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-	if err != nil {
-		http.Error(w, "Erreur PDF", http.StatusInternalServerError)
-		return
-	}
-
-	// Configuration du PDF
-	pdfg.Dpi.Set(300)
-	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
-	pdfg.Grayscale.Set(false)
-	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
-
-	page := wkhtmltopdf.NewPageReader(bytes.NewReader(htmlBuffer.Bytes()))
-	page.DisableSmartShrinking.Set(true)
-	page.EnableLocalFileAccess.Set(true)
-	pdfg.AddPage(page)
-
-	if err := pdfg.Create(); err != nil {
-		http.Error(w, "Erreur création PDF", http.StatusInternalServerError)
-		return
-	}
-
-	// Nom de fichier personnalisé
-	filename := fmt.Sprintf("devis_%s.pdf", data.Reference)
-	w.Header().Set("Content-Type", "application/pdf")
+	// TEMPORAIRE: Retourner du HTML au lieu du PDF car wkhtmltopdf n'est pas disponible
+	filename := fmt.Sprintf("devis_%s.html", data.Reference)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%s", filename))
-	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
+	w.Write(htmlBuffer.Bytes())
 }
 
 // DownloadDevisPDF godoc
@@ -354,7 +330,7 @@ func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 
 	objet := devis.Objet
 	if objet == "" {
-		objet = fmt.Sprintf("Devis pour %s", devis.Client.Nom)
+		objet = fmt.Sprintf("Devis pour %s", devis.Client.GetDisplayName())
 	}
 
 	// Informations de l'entreprise
@@ -366,7 +342,7 @@ func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 		Ville:           devisConfig.DefaultCity,
 		DateEdition:     dateEdition,
 		DateExpiration:  dateExpiration,
-		ClientNom:       devis.Client.Nom,
+		ClientNom:       devis.Client.GetDisplayName(),
 		ClientAdresse:   devis.Client.Adresse,
 		ClientEmail:     devis.Client.Email,
 		ClientTelephone: devis.Client.Telephone,
@@ -403,31 +379,11 @@ func DownloadDevisPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-	if err != nil {
-		http.Error(w, "Erreur PDF", http.StatusInternalServerError)
-		return
-	}
-
-	pdfg.Dpi.Set(300)
-	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
-	pdfg.Grayscale.Set(false)
-	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
-
-	page := wkhtmltopdf.NewPageReader(bytes.NewReader(htmlBuffer.Bytes()))
-	page.DisableSmartShrinking.Set(true)
-	page.EnableLocalFileAccess.Set(true)
-	pdfg.AddPage(page)
-
-	if err := pdfg.Create(); err != nil {
-		http.Error(w, "Erreur création PDF", http.StatusInternalServerError)
-		return
-	}
-
-	filename := fmt.Sprintf("devis_%s.pdf", data.Reference)
-	w.Header().Set("Content-Type", "application/pdf")
+	// TEMPORAIRE: Retourner du HTML au lieu du PDF car wkhtmltopdf n'est pas disponible
+	filename := fmt.Sprintf("devis_%s.html", data.Reference)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	io.Copy(w, bytes.NewReader(pdfg.Bytes()))
+	w.Write(htmlBuffer.Bytes())
 }
 
 // GetDevis godoc

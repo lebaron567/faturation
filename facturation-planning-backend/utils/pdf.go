@@ -7,11 +7,10 @@ import (
 	"os"
 
 	"facturation-planning/models"
-
-	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 // GenerateInvoicePDF génère un fichier PDF à partir d'un template HTML
+// TEMPORAIRE: Retourne le HTML au lieu du PDF car wkhtmltopdf n'est pas disponible
 func GenerateInvoicePDF(facture models.Facture, useFilePath bool) (string, error) {
 	fmt.Println("🚀 GenerateInvoicePDF appelée pour la facture :", facture.ID)
 
@@ -54,41 +53,6 @@ func GenerateInvoicePDF(facture models.Facture, useFilePath bool) (string, error
 		return "", fmt.Errorf("Erreur lors de l'écriture du fichier HTML temporaire : %v", err)
 	}
 
-	// Si c'est pour Live Server, retourne juste le chemin HTML
-	if !useFilePath {
-		return tempHTMLFile, nil
-	}
-
-	// Création du PDF
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-	if err != nil {
-		fmt.Println("❌ Erreur lors de la création du générateur PDF :", err)
-		return "", fmt.Errorf("Erreur lors de la création du générateur PDF : %v", err)
-	}
-
-	pdfg.AddPage(wkhtmltopdf.NewPage(tempHTMLFile))
-	fmt.Println("🔍 Conversion en PDF en cours...")
-
-	err = pdfg.Create()
-	if err != nil {
-		fmt.Println("❌ Erreur lors de la création du PDF :", err)
-		return "", fmt.Errorf("Erreur lors de la création du PDF : %v", err)
-	}
-
-	// Vérifier si le dossier "factures" existe
-	factureDir := "factures"
-	if _, err := os.Stat(factureDir); os.IsNotExist(err) {
-		os.Mkdir(factureDir, 0755)
-	}
-
-	// Sauvegarde du PDF
-	filePath := fmt.Sprintf("factures/facture_%d.pdf", facture.ID)
-	err = pdfg.WriteFile(filePath)
-	if err != nil {
-		fmt.Println("❌ Erreur lors de la sauvegarde du PDF :", err)
-		return "", fmt.Errorf("Erreur lors de la sauvegarde du PDF : %v", err)
-	}
-
-	fmt.Println("✅ PDF généré avec succès :", filePath)
-	return filePath, nil
+	fmt.Printf("✅ Fichier HTML créé: %s\n", tempHTMLFile)
+	return tempHTMLFile, nil
 }

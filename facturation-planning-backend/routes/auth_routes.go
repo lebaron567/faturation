@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func AuthRoutes(r *chi.Mux) {
-	r.Post("/register", controllers.RegisterEntreprise)
-	r.Post("/login", controllers.LoginEntreprise)
+func AuthRoutes(r chi.Router) {
+	r.Post("/auth/login", controllers.LoginEntreprise)
+	r.Post("/auth/register", controllers.RegisterEntreprise)
 }

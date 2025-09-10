@@ -121,3 +121,15 @@ func DeletePlanning(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("🗑️ Planning supprimé ID %s\n", id)
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// @Summary Récupérer les types d'événements
+// @Description Retourne la liste des types d'événements disponibles pour les plannings
+// @Tags Planning
+// @Produce json
+// @Success 200 {array} string
+// @Router /api/plannings/types-evenements [get]
+func GetTypesEvenements(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	types := models.GetTypesEvenements()
+	json.NewEncoder(w).Encode(types)
+}

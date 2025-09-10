@@ -7,6 +7,7 @@ import { formatEventsFromApi, extractDateInfo, handleChange } from "./utils";
 import PlanningForm from "./PlanningForm";
 import CustomEvent from "./CustomEvent";
 import PlanningSidebar from "./PlanningSidebar"; // importe la nouvelle sidebar
+import { getClientDisplayName } from '../../utils/clientUtils';
 
 
 import "moment/locale/fr";
@@ -174,7 +175,7 @@ const Planning = () => {
 
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
-    return client ? `${client.nom} (${client.email})` : `ID: ${clientId}`;
+    return client ? `${getClientDisplayName(client)} (${client.email})` : `ID: ${clientId}`;
   };
 
 

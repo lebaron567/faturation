@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "../axiosInstance";
+import { getClientDisplayName } from "../utils/clientUtils";
 
 const GestionDocuments = () => {
   const [devisList, setDevisList] = useState([]);
@@ -162,7 +163,7 @@ const GestionDocuments = () => {
                           {devis.statut || 'brouillon'}
                         </span>
                       </div>
-                      <p><strong>Client:</strong> {devis.Client?.nom || devis.client_nom}</p>
+                      <p><strong>Client:</strong> {getClientDisplayName(devis.Client) || devis.client_nom || "Client inconnu"}</p>
                       <p><strong>Date:</strong> {new Date(devis.date_devis).toLocaleDateString()}</p>
                       <p><strong>Total TTC:</strong> {devis.total_ttc?.toFixed(2) || "0.00"} €</p>
 

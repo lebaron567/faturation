@@ -31,9 +31,9 @@ func main() {
 		return
 	}
 
-	// Charger les variables d'environnement
+	// Charger les variables d'environnement (optionnel en container)
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("❌ Erreur de chargement du fichier .env")
+		log.Println("⚠️  Fichier .env non trouvé, utilisation des variables d'environnement du système")
 	}
 
 	// Connexion à la base de données
@@ -68,9 +68,9 @@ func handleMigrationCommand() {
 		os.Exit(1)
 	}
 
-	// Charger les variables d'environnement
+	// Charger les variables d'environnement (optionnel en container)
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("❌ Erreur de chargement du fichier .env")
+		log.Println("⚠️  Fichier .env non trouvé, utilisation des variables d'environnement du système")
 	}
 
 	// Connexion à la base de données
@@ -166,12 +166,24 @@ func seed() error {
 		}
 
 		// Créer un client de test
+		nomOrganisme := "Entreprise Test SARL"
+		adresse := "456 Avenue de la République"
+		complementAdresse := ""
+		codePostal := "44000"
+		ville := "Nantes"
+		email := "contact@entreprise-test.fr"
+		telephone := "02 40 98 76 54"
+
 		client := models.Client{
-			Nom:          "Entreprise Test SARL",
-			Adresse:      "456 Avenue de la République\n44000 Nantes",
-			Email:        "contact@entreprise-test.fr",
-			Telephone:    "02 40 98 76 54",
-			EntrepriseID: entreprise.ID,
+			TypeClient:        "professionnel",
+			NomOrganisme:      &nomOrganisme,
+			Adresse:           adresse,
+			ComplementAdresse: complementAdresse,
+			CodePostal:        codePostal,
+			Ville:             ville,
+			Email:             email,
+			Telephone:         telephone,
+			EntrepriseID:      entreprise.ID,
 		}
 
 		if err := config.DB.Create(&client).Error; err != nil {

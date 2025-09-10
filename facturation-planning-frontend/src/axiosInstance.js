@@ -1,9 +1,13 @@
 import axios from "axios";
 
-// Configuration depuis les variables d'environnement
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+// Configuration depuis les variables d'environnement - Force rebuild 09/09
+console.log("Build env check - REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost/api";
 const DEBUG = process.env.REACT_APP_DEBUG === "true";
 const TOKEN_KEY = process.env.REACT_APP_TOKEN_KEY || "auth_token";
+
+// Debug: vérification de l'URL API au démarrage
+console.log("AxiosInstance initialized with API_URL:", API_URL);
 
 const instance = axios.create({
   baseURL: API_URL, // URL configurable via .env
@@ -24,6 +28,13 @@ if (DEBUG) {
 // Intercepteur pour ajouter automatiquement le token JWT
 instance.interceptors.request.use(
   (config) => {
+    console.log("🔧 Axios DEBUG - Configuration de base:", {
+      baseURL: config.baseURL,
+      url: config.url,
+      fullURL: `${config.baseURL}${config.url}`,
+      method: config.method?.toUpperCase()
+    });
+
     if (DEBUG) {
       console.log("📤 Requête sortante:", config.method?.toUpperCase(), config.url);
     }
@@ -70,6 +81,14 @@ instance.interceptors.request.use(
 // Intercepteur pour gérer les erreurs d'authentification et CORS
 instance.interceptors.response.use(
   (response) => {
+    console.log("✅ Réponse reçue:", {
+      url: response.config.url,
+      status: response.status,
+      contentType: response.headers['content-type'],
+      dataType: typeof response.data,
+      dataPreview: typeof response.data === 'string' ? response.data.substring(0, 100) + '...' : 'JSON'
+    });
+
     if (DEBUG) {
       console.log("📥 Réponse reçue:", response.status, response.config.url);
     }

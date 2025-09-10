@@ -22,7 +22,7 @@ const Header = ({ toggleSidebar }) => {
     const routeMap = {
       '/': { name: 'Accueil', icon: '🏠' },
       '/planning': { name: 'Planning', icon: '📅' },
-      '/devis': { name: 'Créer un devis', icon: '✨' },
+      '/devis/creer': { name: 'Créer un devis', icon: '✨' },
       '/devis/manager': { name: 'Gérer les devis', icon: '📋' },
       '/devis/liste': { name: 'Liste des devis', icon: '📋' },
       '/factures': { name: 'Factures', icon: '🧾' },
@@ -114,7 +114,7 @@ const Header = ({ toggleSidebar }) => {
                 // Actions générales
                 <>
                   <button
-                    onClick={() => navigate('/devis')}
+                    onClick={() => navigate('/devis/creer')}
                     title="Créer un devis rapidement (Ctrl+D)"
                     className="quick-action-btn"
                   >

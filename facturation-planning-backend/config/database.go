@@ -1,15 +1,12 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	_ "github.com/lib/pq" // Import pour SQL natif
 )
 
 var DB *gorm.DB
@@ -22,46 +19,27 @@ func ConnectDB() {
 	dbName := os.Getenv("DB_NAME")
 	port := os.Getenv("DB_PORT")
 
-	// Connexion à PostgreSQL sans base spécifique pour créer la DB
-	dsnWithoutDB := fmt.Sprintf(
-		"host=%s user=%s password=%s port=%s sslmode=disable",
-		host, user, password, port,
-	)
-
-	sqlDB, err := sql.Open("postgres", dsnWithoutDB)
-	if err != nil {
-		log.Fatal("❌ Erreur de connexion à PostgreSQL :", err)
-	}
-	defer sqlDB.Close()
-
-	// Vérifier si la base existe
-	var exists bool
-	query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '%s')", dbName)
-	err = sqlDB.QueryRow(query).Scan(&exists)
-	if err != nil {
-		log.Fatal("❌ Erreur lors de la vérification de la base :", err)
+	// Si pas de port défini, utiliser le port par défaut
+	if port == "" {
+		port = "5432"
 	}
 
-	// Si la base n'existe pas, on la crée
-	if !exists {
-		fmt.Println("⚠️  Base de données non trouvée. Création en cours...")
-		_, err = sqlDB.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName))
-		if err != nil {
-			log.Fatal("❌ Erreur lors de la création de la base :", err)
-		}
-		fmt.Println("✅ Base de données créée avec succès !")
-	}
+	log.Printf("🔗 Tentative de connexion à la base de données...")
+	log.Printf("   Host: %s, Port: %s, User: %s, DB: %s", host, port, user, dbName)
 
-	// Connexion à la base créée
+	// Connexion directe à la base de données
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		host, user, password, dbName, port,
 	)
 
+	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("❌ Erreur de connexion à la base de données :", err)
+		log.Printf("❌ Erreur de connexion à la base de données: %v", err)
+		log.Printf("   DSN utilisé: host=%s user=%s dbname=%s port=%s sslmode=disable", host, user, dbName, port)
+		log.Fatal("❌ Impossible de se connecter à la base de données")
 	}
 
-	fmt.Println("✅ Connexion à la base de données réussie")
+	log.Println("✅ Connexion à la base de données réussie")
 }

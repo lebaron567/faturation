@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { TYPES_EVENEMENTS, formatTypeEvenement, requiresFacturation } from '../../utils/planningUtils';
+import { getClientSelectLabel } from '../../utils/clientUtils';
 
 const PlanningForm = ({
   form,
@@ -9,6 +11,13 @@ const PlanningForm = ({
   salaries,
   clients,
 }) => {
+  const [showFacturationFields, setShowFacturationFields] = useState(false);
+
+  // Vérifie si le type d'événement nécessite des champs de facturation
+  useEffect(() => {
+    setShowFacturationFields(requiresFacturation(form.type_evenement));
+  }, [form.type_evenement]);
+
   return (
     <>
       <div className="modal-overlay" onClick={onCancel} />
@@ -85,26 +94,31 @@ const PlanningForm = ({
               <h4 className="section-title">📋 Détails de l'événement</h4>
               <div className="form-group">
                 <label htmlFor="type_evenement">Type d'événement</label>
-                <input
+                <select
                   id="type_evenement"
                   name="type_evenement"
-                  placeholder="ex: Intervention, Réunion, Formation..."
                   onChange={handleChange}
                   value={form.type_evenement || ""}
                   required
                   className="form-input"
-                />
+                >
+                  <option value="">Sélectionner un type...</option>
+                  {TYPES_EVENEMENTS.map((type) => (
+                    <option key={type} value={type}>
+                      {formatTypeEvenement(type)}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="objet">Objet *</label>
+                <label htmlFor="objet">Objet</label>
                 <input
                   id="objet"
                   name="objet"
                   placeholder="Titre de l'événement"
                   onChange={handleChange}
                   value={form.objet || ""}
-                  required
                   className="form-input"
                 />
               </div>
@@ -160,7 +174,7 @@ const PlanningForm = ({
                     <option value="">-- Sélectionner un client --</option>
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.nom} ({c.email})
+                        {getClientSelectLabel(c)}
                       </option>
                     ))}
                   </select>
@@ -168,58 +182,61 @@ const PlanningForm = ({
               </div>
             </div>
 
-            {/* Section Facturation */}
-            <div className="form-section">
-              <h4 className="section-title">💰 Facturation</h4>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="facturation">Statut de facturation</label>
-                  <select
-                    id="facturation"
-                    name="facturation"
-                    onChange={handleChange}
-                    value={form.facturation || ""}
-                    className="form-select"
-                  >
-                    <option value="">-- Sélectionner --</option>
-                    <option value="Comptabilisé">✅ Comptabilisé</option>
-                    <option value="Non Comptabilisé">⏳ Non Comptabilisé</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="taux_horaire">Taux horaire (€)</label>
-                  <input
-                    id="taux_horaire"
-                    name="taux_horaire"
-                    type="number"
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    value={form.taux_horaire || ""}
-                    className="form-input"
-                    step="0.01"
-                    min="0"
-                  />
+            {/* Section Facturation - Affichée seulement pour certains types d'événements */}
+            {showFacturationFields && (
+              <div className="form-section">
+                <h4 className="section-title">💰 Facturation</h4>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="facturation">Statut de facturation</label>
+                    <select
+                      id="facturation"
+                      name="facturation"
+                      onChange={handleChange}
+                      value={form.facturation || ""}
+                      className="form-select"
+                    >
+                      <option value="">-- Sélectionner --</option>
+                      <option value="À facturer">💼 À facturer</option>
+                      <option value="Comptabilisé">✅ Comptabilisé</option>
+                      <option value="Non Comptabilisé">⏳ Non Comptabilisé</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="forfait_ht">Forfait HT (€)</label>
-                  <input
-                    id="forfait_ht"
-                    name="forfait_ht"
-                    type="number"
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    value={form.forfait_ht || ""}
-                    className="form-input"
-                    step="0.01"
-                    min="0"
-                  />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="taux_horaire">Taux horaire (€)</label>
+                    <input
+                      id="taux_horaire"
+                      name="taux_horaire"
+                      type="number"
+                      placeholder="0.00"
+                      onChange={handleChange}
+                      value={form.taux_horaire || ""}
+                      className="form-input"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="forfait_ht">Forfait HT (€)</label>
+                    <input
+                      id="forfait_ht"
+                      name="forfait_ht"
+                      type="number"
+                      placeholder="0.00"
+                      onChange={handleChange}
+                      value={form.forfait_ht || ""}
+                      className="form-input"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </form>
         </div>
 

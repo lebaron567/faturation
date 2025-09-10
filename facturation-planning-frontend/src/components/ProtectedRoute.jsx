@@ -7,8 +7,11 @@ const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
     const location = useLocation();
 
+    console.log('🛡️ ProtectedRoute - État:', { isAuthenticated, loading, path: location.pathname });
+
     // Afficher un spinner pendant le chargement
     if (loading) {
+        console.log('⏳ ProtectedRoute - Affichage du spinner de chargement');
         return (
             <div className="loading-container">
                 <div className="loading-spinner">
@@ -21,9 +24,11 @@ const ProtectedRoute = ({ children }) => {
 
     // Si non authentifié, rediriger vers le login avec l'URL de destination
     if (!isAuthenticated) {
+        console.log('🚫 ProtectedRoute - Redirection vers login depuis:', location.pathname);
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
+    console.log('✅ ProtectedRoute - Accès autorisé à:', location.pathname);
     return children;
 };
 

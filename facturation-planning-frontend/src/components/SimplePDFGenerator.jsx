@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { getClientDisplayName } from '../utils/clientUtils';
 
 /**
  * Générateur PDF simplifié pour tester
@@ -20,7 +21,7 @@ export const SimplePDFGenerator = {
       if (devis) {
         pdf.text(`Devis ID: ${devis.id || 'Non défini'}`, 20, 70);
         if (devis.client) {
-          pdf.text(`Client: ${devis.client.nom || 'Non défini'}`, 20, 90);
+          pdf.text(`Client: ${getClientDisplayName(devis.client) || 'Non défini'}`, 20, 90);
         }
         if (devis.entreprise) {
           pdf.text(`Entreprise: ${devis.entreprise.nom || 'Non défini'}`, 20, 110);

@@ -6,7 +6,8 @@ Write-Host "===============================================" -ForegroundColor Gr
 try {
     docker info *>$null
     Write-Host "Docker est operationnel" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "Docker n'est pas demarre. Veuillez lancer Docker Desktop." -ForegroundColor Red
     exit 1
 }

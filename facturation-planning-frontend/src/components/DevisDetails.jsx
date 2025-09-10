@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "../axiosInstance";
 import "../styles/DevisDetails.css";
+import { getClientDisplayName } from '../utils/clientUtils';
 
 const DevisDetails = () => {
   const { id } = useParams();
@@ -236,7 +237,7 @@ const DevisDetails = () => {
               <>
                 <div className="info-row">
                   <span className="label">Nom:</span>
-                  <span className="value">{devis.client.nom}</span>
+                  <span className="value">{getClientDisplayName(devis.client)}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>

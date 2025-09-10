@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "../axiosInstance";
+import { getClientSelectLabel } from "../utils/clientUtils";
 
 const DevisManager = () => {
     const [devisList, setDevisList] = useState([]);
@@ -221,7 +222,7 @@ const DevisManager = () => {
                         <option value="">Tous les clients</option>
                         {clients.map(client => (
                             <option key={client.id} value={client.id}>
-                                {client.nom} ({client.email})
+                                {getClientSelectLabel(client)}
                             </option>
                         ))}
                     </select>
