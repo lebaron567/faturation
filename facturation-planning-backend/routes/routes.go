@@ -58,12 +58,5 @@ func SetupRoutes() *chi.Mux {
 		r.Delete("/{id}", controllers.DeletePlanning)
 	})
 
-	// Facturation mensuelle (endpoints protégés)
-	r.Route("/facturation-mensuelle", func(r chi.Router) {
-		r.Use(middlewares.JWTMiddleware)
-		r.Post("/preview", controllers.GetFacturationMensuellePreview)
-		r.Post("/create", controllers.CreateFacturationMensuelle)
-	})
-
 	return r
 }

@@ -127,8 +127,8 @@ func LoginEntreprise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Générer un token JWT
-	token, err := auth.GenerateJWT(entreprise.ID)
+	// Générer un token JWT avec toutes les informations
+	token, err := auth.GenerateJWT(entreprise.ID, entreprise.Nom, entreprise.Email)
 	if err != nil {
 		http.Error(w, "Erreur lors de la génération du token", http.StatusInternalServerError)
 		fmt.Println("❌ Erreur de génération du token :", err)

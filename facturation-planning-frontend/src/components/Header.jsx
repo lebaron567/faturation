@@ -28,7 +28,9 @@ const Header = ({ toggleSidebar }) => {
       '/factures': { name: 'Factures', icon: '🧾' },
       '/documents': { name: 'Documents', icon: '📁' },
       '/clients/ajouter': { name: 'Nouveau client', icon: '👤' },
+      '/clients/gestion': { name: 'Gérer les clients', icon: '👥' },
       '/salarie/ajouter': { name: 'Nouveau salarié', icon: '🤝' },
+      '/salaries/gestion': { name: 'Gérer les salariés', icon: '👨‍💼' },
       '/login': { name: 'Connexion', icon: '🔐' },
       '/register': { name: 'Inscription', icon: '📝' }
     };

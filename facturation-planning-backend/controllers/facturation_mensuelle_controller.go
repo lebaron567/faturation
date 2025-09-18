@@ -2,413 +2,511 @@ package controllers
 
 import (
 	"encoding/json"
-	"facturation-planning/config"
-	"facturation-planning/models"
 	"fmt"
+	"log"
 	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"facturation-planning/config"
+	"facturation-planning/models"
 )
 
 // FacturationMensuelleRequest représente la demande de facturation mensuelle
 type FacturationMensuelleRequest struct {
-	Mois      int    `json:"mois" validate:"required,min=1,max=12"`
-	Annee     int    `json:"annee" validate:"required,min=2020"`
-	ClientIDs []uint `json:"client_ids"` // Si vide, tous les clients
+	Mois      int    `json:"mois" binding:"required,min=1,max=12"`
+	Annee     int    `json:"annee" binding:"required,min=2020,max=2030"`
+	ClientIDs []uint `json:"client_ids"` // Optionnel, vide = tous les clients
 }
 
-// PrestationFacturable représente une prestation facturable
+// PrestationFacturable représente une prestation qui peut être facturée
 type PrestationFacturable struct {
-	PlanningID      uint      `json:"planning_id"`
-	Date            time.Time `json:"date"`
-	Objet           string    `json:"objet"`
-	Prestation      string    `json:"prestation"`
-	TypeFacturation string    `json:"type_facturation"` // "horaire" ou "forfait"
-	TauxHoraire     *float64  `json:"taux_horaire,omitempty"`
-	ForfaitHT       *float64  `json:"forfait_ht,omitempty"`
-	Duree           float64   `json:"duree,omitempty"` // en heures
-	MontantHT       float64   `json:"montant_ht"`
-	TVA             float64   `json:"tva"`
-	MontantTTC      float64   `json:"montant_ttc"`
+	Date            string  `json:"date"`
+	ClientID        uint    `json:"client_id"`
+	ClientNom       string  `json:"client_nom"`
+	Prestation      string  `json:"prestation"`
+	Objet           string  `json:"objet"`
+	Duree           float64 `json:"duree"`
+	TauxHoraire     float64 `json:"taux_horaire"`
+	ForfaitHT       float64 `json:"forfait_ht"`
+	TypeFacturation string  `json:"type_facturation"` // "horaire" ou "forfait"
+	MontantHT       float64 `json:"montant_ht"`
+	MontantTTC      float64 `json:"montant_ttc"`
+	TauxTVA         float64 `json:"taux_tva"`
 }
 
-// ClientFacturation représente les données de facturation pour un client
+// ClientFacturation représente la facturation d'un client
 type ClientFacturation struct {
-	ClientID    uint                    `json:"client_id"`
-	ClientNom   string                  `json:"client_nom"`
-	Prestations []PrestationFacturable  `json:"prestations"`
-	TotalHT     float64                 `json:"total_ht"`
-	TotalTVA    float64                 `json:"total_tva"`
-	TotalTTC    float64                 `json:"total_ttc"`
-	NbHeures    float64                 `json:"nb_heures"`
-	NbForfaits  int                     `json:"nb_forfaits"`
+	ClientID    uint                   `json:"client_id"`
+	ClientNom   string                 `json:"client_nom"`
+	NbHeures    float64                `json:"nb_heures"`
+	NbForfaits  int                    `json:"nb_forfaits"`
+	TotalHT     float64                `json:"total_ht"`
+	TotalTTC    float64                `json:"total_ttc"`
+	Prestations []PrestationFacturable `json:"prestations"`
 }
 
-// FacturationMensuelleResponse représente la réponse de facturation mensuelle
+// FacturationMensuelleResponse représente la réponse d'aperçu
 type FacturationMensuelleResponse struct {
-	Mois               int                  `json:"mois"`
-	Annee              int                  `json:"annee"`
-	NomMois            string               `json:"nom_mois"`
-	NbClients          int                  `json:"nb_clients"`
-	NbPrestations      int                  `json:"nb_prestations"`
-	TotalGeneralHT     float64              `json:"total_general_ht"`
-	TotalGeneralTVA    float64              `json:"total_general_tva"`
-	TotalGeneralTTC    float64              `json:"total_general_ttc"`
-	ClientsFacturation []ClientFacturation  `json:"clients_facturation"`
-	FacturesCreees     []uint               `json:"factures_creees,omitempty"`
+	Mois               int                 `json:"mois"`
+	NomMois            string              `json:"nom_mois"`
+	Annee              int                 `json:"annee"`
+	NbClients          int                 `json:"nb_clients"`
+	NbPrestations      int                 `json:"nb_prestations"`
+	TotalGeneralHT     float64             `json:"total_general_ht"`
+	TotalGeneralTTC    float64             `json:"total_general_ttc"`
+	ClientsFacturation []ClientFacturation `json:"clients_facturation"`
 }
 
-// @Summary Aperçu de la facturation mensuelle
-// @Description Génère un aperçu des factures à créer pour un mois donné
-// @Tags Facturation
-// @Accept json
-// @Produce json
-// @Param request body FacturationMensuelleRequest true "Paramètres de facturation"
-// @Success 200 {object} FacturationMensuelleResponse
-// @Failure 400 {string} string "Paramètres invalides"
-// @Failure 500 {string} string "Erreur serveur"
-// @Router /api/facturation-mensuelle/preview [post]
+// FacturationMensuelleCreateResponse représente la réponse de création
+type FacturationMensuelleCreateResponse struct {
+	FacturesCreees []FactureCreee `json:"factures_creees"`
+	NbFactures     int            `json:"nb_factures"`
+	TotalHT        float64        `json:"total_ht"`
+	TotalTTC       float64        `json:"total_ttc"`
+}
+
+// FactureCreee représente une facture créée
+type FactureCreee struct {
+	ID        uint    `json:"id"`
+	Reference string  `json:"reference"`
+	ClientNom string  `json:"client_nom"`
+	TotalHT   float64 `json:"total_ht"`
+	TotalTTC  float64 `json:"total_ttc"`
+}
+
+var nomsMois = []string{
+	"", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+	"Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+}
+
+// GetFacturationMensuellePreview génère un aperçu de la facturation mensuelle
 func GetFacturationMensuellePreview(w http.ResponseWriter, r *http.Request) {
-	var request FacturationMensuelleRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Paramètres invalides", http.StatusBadRequest)
-		return
-	}
-
-	// Validation
-	if request.Mois < 1 || request.Mois > 12 {
-		http.Error(w, "Mois invalide (1-12)", http.StatusBadRequest)
-		return
-	}
-	if request.Annee < 2020 {
-		http.Error(w, "Année invalide", http.StatusBadRequest)
-		return
-	}
-
-	response, err := generateFacturationMensuelle(request, false)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
 
-// @Summary Créer la facturation mensuelle
-// @Description Crée effectivement toutes les factures pour un mois donné
-// @Tags Facturation
-// @Accept json
-// @Produce json
-// @Param request body FacturationMensuelleRequest true "Paramètres de facturation"
-// @Success 201 {object} FacturationMensuelleResponse
-// @Failure 400 {string} string "Paramètres invalides"
-// @Failure 500 {string} string "Erreur serveur"
-// @Router /api/facturation-mensuelle/create [post]
-func CreateFacturationMensuelle(w http.ResponseWriter, r *http.Request) {
-	var request FacturationMensuelleRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Paramètres invalides", http.StatusBadRequest)
+	var req FacturationMensuelleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Erreur de parsing JSON: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	// Validation
-	if request.Mois < 1 || request.Mois > 12 {
-		http.Error(w, "Mois invalide (1-12)", http.StatusBadRequest)
-		return
-	}
-	if request.Annee < 2020 {
-		http.Error(w, "Année invalide", http.StatusBadRequest)
-		return
-	}
+	log.Printf("🔍 Preview facturation mensuelle: mois=%d, année=%d, clients=%v", req.Mois, req.Annee, req.ClientIDs)
 
-	response, err := generateFacturationMensuelle(request, true)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Valider les paramètres
+	if req.Mois < 1 || req.Mois > 12 {
+		http.Error(w, "Le mois doit être entre 1 et 12", http.StatusBadRequest)
+		return
+	}
+	if req.Annee < 2020 || req.Annee > 2030 {
+		http.Error(w, "L'année doit être entre 2020 et 2030", http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
+	// Calculer les dates de début et fin du mois
+	dateDebut := time.Date(req.Annee, time.Month(req.Mois), 1, 0, 0, 0, 0, time.UTC)
+	dateFin := dateDebut.AddDate(0, 1, -1).Add(23*time.Hour + 59*time.Minute + 59*time.Second)
 
-func generateFacturationMensuelle(request FacturationMensuelleRequest, createFactures bool) (*FacturationMensuelleResponse, error) {
-	// Calculer les dates du mois
-	startDate := time.Date(request.Annee, time.Month(request.Mois), 1, 0, 0, 0, 0, time.UTC)
-	endDate := startDate.AddDate(0, 1, -1)
-	endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 0, time.UTC)
+	log.Printf("📅 Période: %v à %v", dateDebut.Format("2006-01-02"), dateFin.Format("2006-01-02"))
 
-	fmt.Printf("🔍 Recherche plannings du %s au %s\n", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
-
-	// Construire la requête pour récupérer les plannings facturables
-	query := config.DB.Where("date >= ? AND date <= ?", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")).
-		Where("type_evenement IN (?)", []string{"Intervention", "Formation", "Divers"}).
-		Where("(taux_horaire IS NOT NULL AND taux_horaire > 0) OR (forfait_ht IS NOT NULL AND forfait_ht > 0)").
-		Preload("Client")
+	// Requête pour récupérer les plannings facturables
+	query := config.DB.Table("plannings").
+		Select(`
+			plannings.date,
+			plannings.client_id,
+			clients.nom as client_nom,
+			clients.prenom as client_prenom,
+			clients.raison_sociale,
+			clients.type_client,
+			plannings.prestation,
+			plannings.objet,
+			plannings.duree,
+			plannings.taux_horaire,
+			plannings.forfait_ht,
+			plannings.type_evenement
+		`).
+		Joins("JOIN clients ON plannings.client_id = clients.id").
+		Where("plannings.date >= ? AND plannings.date <= ?", dateDebut, dateFin).
+		Where("plannings.type_evenement IN (?)", []string{"Intervention", "Formation", "Divers"}).
+		Where("(plannings.taux_horaire IS NOT NULL AND plannings.taux_horaire > 0) OR (plannings.forfait_ht IS NOT NULL AND plannings.forfait_ht > 0)")
 
 	// Filtrer par clients si spécifié
-	if len(request.ClientIDs) > 0 {
-		query = query.Where("client_id IN (?)", request.ClientIDs)
+	if len(req.ClientIDs) > 0 {
+		query = query.Where("plannings.client_id IN (?)", req.ClientIDs)
 	}
 
-	var plannings []models.Planning
-	if err := query.Find(&plannings).Error; err != nil {
-		return nil, fmt.Errorf("erreur lors de la récupération des plannings: %v", err)
+	// Exécuter la requête
+	rows, err := query.Rows()
+	if err != nil {
+		log.Printf("❌ Erreur requête plannings: %v", err)
+		http.Error(w, fmt.Sprintf("Erreur base de données: %v", err), http.StatusInternalServerError)
+		return
 	}
+	defer rows.Close()
 
-	fmt.Printf("📋 Trouvé %d plannings facturables\n", len(plannings))
-
-	// Grouper par client
 	clientsMap := make(map[uint]*ClientFacturation)
+	var totalGeneralHT, totalGeneralTTC float64
+	var nbPrestationsTotal int
 
-	for _, planning := range plannings {
-		if planning.ClientID == 0 {
-			continue // Ignorer les plannings sans client
+	// Traiter chaque ligne
+	for rows.Next() {
+		var date time.Time
+		var clientID uint
+		var clientNom, clientPrenom, raisonSociale, typeClient, prestation, objet, typeEvenement string
+		var duree, tauxHoraire, forfaitHT *float64
+
+		err := rows.Scan(&date, &clientID, &clientNom, &clientPrenom, &raisonSociale, &typeClient,
+			&prestation, &objet, &duree, &tauxHoraire, &forfaitHT, &typeEvenement)
+		if err != nil {
+			log.Printf("❌ Erreur scan ligne: %v", err)
+			continue
 		}
 
-		// Créer l'item client s'il n'existe pas
-		if _, exists := clientsMap[planning.ClientID]; !exists {
-			clientName := "Client inconnu"
-			if planning.Client.GetDisplayName() != "" {
-				clientName = planning.Client.GetDisplayName()
-			}
+		// Calculer le nom du client
+		var nomComplet string
+		if typeClient == "professionnel" && raisonSociale != "" {
+			nomComplet = raisonSociale
+		} else {
+			nomComplet = fmt.Sprintf("%s %s", clientPrenom, clientNom)
+		}
 
-			clientsMap[planning.ClientID] = &ClientFacturation{
-				ClientID:    planning.ClientID,
-				ClientNom:   clientName,
+		// Déterminer le type de facturation et calculer le montant
+		var typeFacturation string
+		var montantHT float64
+
+		if tauxHoraire != nil && *tauxHoraire > 0 && duree != nil && *duree > 0 {
+			typeFacturation = "horaire"
+			montantHT = *tauxHoraire * *duree
+		} else if forfaitHT != nil && *forfaitHT > 0 {
+			typeFacturation = "forfait"
+			montantHT = *forfaitHT
+		} else {
+			log.Printf("⚠️ Prestation non facturable: clientID=%d, date=%v", clientID, date)
+			continue
+		}
+
+		tauxTVA := 20.0 // TVA par défaut
+		montantTTC := montantHT * (1 + tauxTVA/100)
+
+		// Créer la prestation
+		prestationFacturable := PrestationFacturable{
+			Date:            date.Format("2006-01-02"),
+			ClientID:        clientID,
+			ClientNom:       nomComplet,
+			Prestation:      prestation,
+			Objet:           objet,
+			Duree:           getFloat64Value(duree),
+			TauxHoraire:     getFloat64Value(tauxHoraire),
+			ForfaitHT:       getFloat64Value(forfaitHT),
+			TypeFacturation: typeFacturation,
+			MontantHT:       montantHT,
+			MontantTTC:      montantTTC,
+			TauxTVA:         tauxTVA,
+		}
+
+		// Ajouter au client
+		if clientsMap[clientID] == nil {
+			clientsMap[clientID] = &ClientFacturation{
+				ClientID:    clientID,
+				ClientNom:   nomComplet,
 				Prestations: []PrestationFacturable{},
 			}
 		}
 
-		// Calculer la prestation facturable
-		prestation, err := calculatePrestationFacturable(&planning)
-		if err != nil {
-			fmt.Printf("⚠️ Erreur calcul prestation planning %d: %v\n", planning.ID, err)
-			continue
-		}
+		client := clientsMap[clientID]
+		client.Prestations = append(client.Prestations, prestationFacturable)
+		client.TotalHT += montantHT
+		client.TotalTTC += montantTTC
 
-		client := clientsMap[planning.ClientID]
-		client.Prestations = append(client.Prestations, prestation)
-
-		// Mettre à jour les totaux
-		client.TotalHT += prestation.MontantHT
-		client.TotalTVA += prestation.TVA
-		client.TotalTTC += prestation.MontantTTC
-
-		if prestation.TypeFacturation == "horaire" {
-			client.NbHeures += prestation.Duree
+		if typeFacturation == "horaire" {
+			client.NbHeures += getFloat64Value(duree)
 		} else {
 			client.NbForfaits++
 		}
+
+		totalGeneralHT += montantHT
+		totalGeneralTTC += montantTTC
+		nbPrestationsTotal++
 	}
 
-	// Convertir en slice et calculer les totaux généraux
+	// Convertir la map en slice
 	var clientsFacturation []ClientFacturation
-	var totalGeneralHT, totalGeneralTVA, totalGeneralTTC float64
-	var nbPrestationsTotales int
-
 	for _, client := range clientsMap {
 		clientsFacturation = append(clientsFacturation, *client)
-		totalGeneralHT += client.TotalHT
-		totalGeneralTVA += client.TotalTVA
-		totalGeneralTTC += client.TotalTTC
-		nbPrestationsTotales += len(client.Prestations)
 	}
 
-	response := &FacturationMensuelleResponse{
-		Mois:               request.Mois,
-		Annee:              request.Annee,
-		NomMois:            getMonthName(request.Mois),
+	response := FacturationMensuelleResponse{
+		Mois:               req.Mois,
+		NomMois:            nomsMois[req.Mois],
+		Annee:              req.Annee,
 		NbClients:          len(clientsFacturation),
-		NbPrestations:      nbPrestationsTotales,
-		TotalGeneralHT:     roundFloat(totalGeneralHT, 2),
-		TotalGeneralTVA:    roundFloat(totalGeneralTVA, 2),
-		TotalGeneralTTC:    roundFloat(totalGeneralTTC, 2),
+		NbPrestations:      nbPrestationsTotal,
+		TotalGeneralHT:     totalGeneralHT,
+		TotalGeneralTTC:    totalGeneralTTC,
 		ClientsFacturation: clientsFacturation,
 	}
 
-	// Créer les factures si demandé
-	if createFactures && len(clientsFacturation) > 0 {
-		facturesCreees, err := createFacturesFromFacturation(request, clientsFacturation)
-		if err != nil {
-			return nil, fmt.Errorf("erreur lors de la création des factures: %v", err)
-		}
-		response.FacturesCreees = facturesCreees
-		fmt.Printf("✅ %d factures créées\n", len(facturesCreees))
-	}
+	log.Printf("✅ Preview généré: %d clients, %d prestations, %.2f€ TTC",
+		response.NbClients, response.NbPrestations, response.TotalGeneralTTC)
 
-	return response, nil
+	json.NewEncoder(w).Encode(response)
 }
 
-func calculatePrestationFacturable(planning *models.Planning) (PrestationFacturable, error) {
-	var montantHT, tva, montantTTC float64
-	var duree float64
-	var typeFacturation string
+// CreateFacturationMensuelle crée les factures pour le mois sélectionné
+func CreateFacturationMensuelle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
-	// Calculer la durée si on a une heure de fin
-	if planning.HeureFin != "" && planning.HeureDebut != "" {
-		debut, err1 := time.Parse("15:04", planning.HeureDebut)
-		fin, err2 := time.Parse("15:04", planning.HeureFin)
-		if err1 == nil && err2 == nil {
-			duree = fin.Sub(debut).Hours()
-			if duree < 0 {
-				duree += 24 // Cas où la fin est le lendemain
-			}
-		}
+	var req FacturationMensuelleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Erreur de parsing JSON: %v", err), http.StatusBadRequest)
+		return
 	}
 
-	// Déterminer le type de facturation et calculer le montant
-	if planning.ForfaitHT != nil && *planning.ForfaitHT > 0 {
-		typeFacturation = "forfait"
-		montantHT = *planning.ForfaitHT
-		duree = 0 // Pas de durée pour un forfait
-	} else if planning.TauxHoraire != nil && *planning.TauxHoraire > 0 && duree > 0 {
-		typeFacturation = "horaire"
-		montantHT = *planning.TauxHoraire * duree
-	} else {
-		return PrestationFacturable{}, fmt.Errorf("aucune méthode de facturation valide")
-	}
+	log.Printf("💰 Création facturation mensuelle: mois=%d, année=%d, clients=%v", req.Mois, req.Annee, req.ClientIDs)
 
-	// Calcul TVA (20% par défaut)
-	tauxTVA := 20.0
-	tva = montantHT * tauxTVA / 100
-	montantTTC = montantHT + tva
-
-	// Préparer les libellés
-	objet := "Prestation"
-	if planning.Objet != nil && *planning.Objet != "" {
-		objet = *planning.Objet
-	}
-
-	prestation := planning.TypeEvenement
-	if planning.Prestation != nil && *planning.Prestation != "" {
-		prestation = *planning.Prestation
-	}
-
-	// Parser la date
-	dateTime, err := time.Parse("2006-01-02", planning.Date)
+	// Récupérer d'abord l'aperçu pour avoir les données
+	preview, err := getFacturationMensuelleData(req)
 	if err != nil {
-		dateTime = time.Now()
+		log.Printf("❌ Erreur récupération données: %v", err)
+		http.Error(w, fmt.Sprintf("Erreur récupération données: %v", err), http.StatusInternalServerError)
+		return
 	}
 
-	return PrestationFacturable{
-		PlanningID:      planning.ID,
-		Date:            dateTime,
-		Objet:           objet,
-		Prestation:      prestation,
-		TypeFacturation: typeFacturation,
-		TauxHoraire:     planning.TauxHoraire,
-		ForfaitHT:       planning.ForfaitHT,
-		Duree:           roundFloat(duree, 2),
-		MontantHT:       roundFloat(montantHT, 2),
-		TVA:             roundFloat(tva, 2),
-		MontantTTC:      roundFloat(montantTTC, 2),
-	}, nil
-}
+	if preview.NbClients == 0 {
+		response := FacturationMensuelleCreateResponse{
+			FacturesCreees: []FactureCreee{},
+			NbFactures:     0,
+			TotalHT:        0,
+			TotalTTC:       0,
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-func createFacturesFromFacturation(request FacturationMensuelleRequest, clientsFacturation []ClientFacturation) ([]uint, error) {
-	var facturesCreees []uint
+	var facturesCreees []FactureCreee
+	var totalHT, totalTTC float64
 
-	for _, client := range clientsFacturation {
-		if len(client.Prestations) == 0 {
+	// Créer une facture pour chaque client
+	for _, clientFacturation := range preview.ClientsFacturation {
+		// Récupérer les informations complètes du client
+		var client models.Client
+		if err := config.DB.First(&client, clientFacturation.ClientID).Error; err != nil {
+			log.Printf("❌ Erreur récupération client %d: %v", clientFacturation.ClientID, err)
 			continue
 		}
 
-		// Créer la facture
+		// Générer une référence unique
+		reference := fmt.Sprintf("FAC-%d-%02d-%03d", req.Annee, req.Mois, clientFacturation.ClientID)
+
+		// Créer la facture avec les bons champs
 		facture := models.Facture{
-			ClientID:     client.ClientID,
-			DateFacture:  time.Now().Format("2006-01-02"),
-			DateEcheance: time.Now().AddDate(0, 0, 30).Format("2006-01-02"), // 30 jours
-			Conditions:   "Paiement sous 30 jours",
-			Objet:        fmt.Sprintf("Facturation %s %d", getMonthName(request.Mois), request.Annee),
-			Statut:       "emise",
-			SousTotalHT:  client.TotalHT,
-			TotalTVA:     client.TotalTVA,
-			TotalTTC:     client.TotalTTC,
+			Reference:       reference,
+			ClientID:        client.ID,
+			ClientNom:       clientFacturation.ClientNom,
+			ClientAdresse:   fmt.Sprintf("%s, %s %s", client.Adresse, client.CodePostal, client.Ville),
+			ClientEmail:     client.Email,
+			ClientTelephone: client.Telephone,
+			DateCreation:    time.Now(),
+			DateEmission:    time.Now(),
+			DateEcheance:    time.Now().AddDate(0, 0, 30), // 30 jours
+			Description:     fmt.Sprintf("Facturation %s %d", nomsMois[req.Mois], req.Annee),
+			TypeFacture:     "classique",
+			SousTotalHT:     clientFacturation.TotalHT,
+			TauxTVA:         20.0,
+			TotalTVA:        clientFacturation.TotalHT * 0.2,
+			TotalTTC:        clientFacturation.TotalTTC,
+			MontantTVA:      clientFacturation.TotalHT * 0.2,
+			Statut:          "en_attente",
+			LieuSignature:   "Paris",
+			DateSignature:   time.Now().Format("02/01/2006"),
 		}
 
+		// Sauvegarder la facture
 		if err := config.DB.Create(&facture).Error; err != nil {
-			return nil, fmt.Errorf("erreur création facture pour client %d: %v", client.ClientID, err)
+			log.Printf("❌ Erreur création facture pour client %d: %v", client.ID, err)
+			continue
 		}
 
-		fmt.Printf("📄 Facture créée #%d pour client %d (%.2f€ TTC)\n", facture.ID, client.ClientID, client.TotalTTC)
-
-		// Créer les lignes de facture (groupées par type si plusieurs prestations similaires)
-		prestationsGroupees := groupPrestations(client.Prestations)
-		
-		for description, details := range prestationsGroupees {
-			quantite := float64(len(details.prestations))
-			prixUnitaire := details.totalHT / quantite
-
+		// Créer les lignes de facture
+		for _, prestation := range clientFacturation.Prestations {
 			ligne := models.LigneFacture{
 				FactureID:    facture.ID,
-				Description:  description,
-				Quantite:     quantite,
-				PrixUnitaire: roundFloat(prixUnitaire, 2),
-				TVA:          20, // 20% par défaut
+				Description:  fmt.Sprintf("%s - %s (%s)", prestation.Prestation, prestation.Objet, prestation.Date),
+				Unite:        "prestation",
+				Quantite:     1,
+				PrixUnitaire: prestation.MontantHT,
+				TotalLigne:   prestation.MontantHT,
+				TauxTVA:      prestation.TauxTVA,
+				MontantHT:    prestation.MontantHT,
+				MontantTTC:   prestation.MontantTTC,
 			}
 
 			if err := config.DB.Create(&ligne).Error; err != nil {
-				return nil, fmt.Errorf("erreur création ligne facture: %v", err)
+				log.Printf("❌ Erreur création ligne facture: %v", err)
 			}
 		}
 
-		facturesCreees = append(facturesCreees, facture.ID)
-	}
-
-	return facturesCreees, nil
-}
-
-type prestationGroup struct {
-	prestations []PrestationFacturable
-	totalHT     float64
-}
-
-func groupPrestations(prestations []PrestationFacturable) map[string]prestationGroup {
-	groups := make(map[string]prestationGroup)
-
-	for _, prestation := range prestations {
-		// Créer une clé de groupement basée sur le type de prestation
-		key := fmt.Sprintf("%s - %s", prestation.Prestation, prestation.Objet)
-		if prestation.TypeFacturation == "horaire" {
-			key += " (horaire)"
-		} else {
-			key += " (forfait)"
+		factureCreee := FactureCreee{
+			ID:        facture.ID,
+			Reference: facture.Reference,
+			ClientNom: facture.ClientNom,
+			TotalHT:   facture.SousTotalHT,
+			TotalTTC:  facture.TotalTTC,
 		}
 
-		if group, exists := groups[key]; exists {
-			group.prestations = append(group.prestations, prestation)
-			group.totalHT += prestation.MontantHT
-			groups[key] = group
+		facturesCreees = append(facturesCreees, factureCreee)
+		totalHT += facture.SousTotalHT
+		totalTTC += facture.TotalTTC
+
+		log.Printf("✅ Facture créée: %s pour %s (%.2f€ TTC)", facture.Reference, facture.ClientNom, facture.TotalTTC)
+	}
+
+	response := FacturationMensuelleCreateResponse{
+		FacturesCreees: facturesCreees,
+		NbFactures:     len(facturesCreees),
+		TotalHT:        totalHT,
+		TotalTTC:       totalTTC,
+	}
+
+	log.Printf("🎉 Facturation mensuelle terminée: %d factures créées, %.2f€ TTC total",
+		response.NbFactures, response.TotalTTC)
+
+	json.NewEncoder(w).Encode(response)
+}
+
+// getFacturationMensuelleData récupère les données de facturation (fonction helper)
+func getFacturationMensuelleData(req FacturationMensuelleRequest) (*FacturationMensuelleResponse, error) {
+	// Calculer les dates de début et fin du mois
+	dateDebut := time.Date(req.Annee, time.Month(req.Mois), 1, 0, 0, 0, 0, time.UTC)
+	dateFin := dateDebut.AddDate(0, 1, -1).Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+
+	// Requête pour récupérer les plannings facturables
+	query := config.DB.Table("plannings").
+		Select(`
+			plannings.date,
+			plannings.client_id,
+			clients.nom as client_nom,
+			clients.prenom as client_prenom,
+			clients.raison_sociale,
+			clients.type_client,
+			plannings.prestation,
+			plannings.objet,
+			plannings.duree,
+			plannings.taux_horaire,
+			plannings.forfait_ht
+		`).
+		Joins("JOIN clients ON plannings.client_id = clients.id").
+		Where("plannings.date >= ? AND plannings.date <= ?", dateDebut, dateFin).
+		Where("plannings.type_evenement IN (?)", []string{"Intervention", "Formation", "Divers"}).
+		Where("(plannings.taux_horaire IS NOT NULL AND plannings.taux_horaire > 0) OR (plannings.forfait_ht IS NOT NULL AND plannings.forfait_ht > 0)")
+
+	if len(req.ClientIDs) > 0 {
+		query = query.Where("plannings.client_id IN (?)", req.ClientIDs)
+	}
+
+	rows, err := query.Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	clientsMap := make(map[uint]*ClientFacturation)
+	var totalGeneralHT, totalGeneralTTC float64
+	var nbPrestationsTotal int
+
+	for rows.Next() {
+		var date time.Time
+		var clientID uint
+		var clientNom, clientPrenom, raisonSociale, typeClient, prestation, objet string
+		var duree, tauxHoraire, forfaitHT *float64
+
+		err := rows.Scan(&date, &clientID, &clientNom, &clientPrenom, &raisonSociale, &typeClient,
+			&prestation, &objet, &duree, &tauxHoraire, &forfaitHT)
+		if err != nil {
+			continue
+		}
+
+		var nomComplet string
+		if typeClient == "professionnel" && raisonSociale != "" {
+			nomComplet = raisonSociale
 		} else {
-			groups[key] = prestationGroup{
-				prestations: []PrestationFacturable{prestation},
-				totalHT:     prestation.MontantHT,
+			nomComplet = fmt.Sprintf("%s %s", clientPrenom, clientNom)
+		}
+
+		var typeFacturation string
+		var montantHT float64
+
+		if tauxHoraire != nil && *tauxHoraire > 0 && duree != nil && *duree > 0 {
+			typeFacturation = "horaire"
+			montantHT = *tauxHoraire * *duree
+		} else if forfaitHT != nil && *forfaitHT > 0 {
+			typeFacturation = "forfait"
+			montantHT = *forfaitHT
+		} else {
+			continue
+		}
+
+		tauxTVA := 20.0
+		montantTTC := montantHT * (1 + tauxTVA/100)
+
+		prestationFacturable := PrestationFacturable{
+			Date:            date.Format("2006-01-02"),
+			ClientID:        clientID,
+			ClientNom:       nomComplet,
+			Prestation:      prestation,
+			Objet:           objet,
+			Duree:           getFloat64Value(duree),
+			TauxHoraire:     getFloat64Value(tauxHoraire),
+			ForfaitHT:       getFloat64Value(forfaitHT),
+			TypeFacturation: typeFacturation,
+			MontantHT:       montantHT,
+			MontantTTC:      montantTTC,
+			TauxTVA:         tauxTVA,
+		}
+
+		if clientsMap[clientID] == nil {
+			clientsMap[clientID] = &ClientFacturation{
+				ClientID:    clientID,
+				ClientNom:   nomComplet,
+				Prestations: []PrestationFacturable{},
 			}
 		}
+
+		client := clientsMap[clientID]
+		client.Prestations = append(client.Prestations, prestationFacturable)
+		client.TotalHT += montantHT
+		client.TotalTTC += montantTTC
+
+		if typeFacturation == "horaire" {
+			client.NbHeures += getFloat64Value(duree)
+		} else {
+			client.NbForfaits++
+		}
+
+		totalGeneralHT += montantHT
+		totalGeneralTTC += montantTTC
+		nbPrestationsTotal++
 	}
 
-	return groups
+	var clientsFacturation []ClientFacturation
+	for _, client := range clientsMap {
+		clientsFacturation = append(clientsFacturation, *client)
+	}
+
+	return &FacturationMensuelleResponse{
+		Mois:               req.Mois,
+		NomMois:            nomsMois[req.Mois],
+		Annee:              req.Annee,
+		NbClients:          len(clientsFacturation),
+		NbPrestations:      nbPrestationsTotal,
+		TotalGeneralHT:     totalGeneralHT,
+		TotalGeneralTTC:    totalGeneralTTC,
+		ClientsFacturation: clientsFacturation,
+	}, nil
 }
 
-func getMonthName(mois int) string {
-	months := []string{
-		"", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-		"Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+// getFloat64Value retourne la valeur d'un pointeur float64 ou 0 si nil
+func getFloat64Value(ptr *float64) float64 {
+	if ptr == nil {
+		return 0
 	}
-	if mois >= 1 && mois <= 12 {
-		return months[mois]
-	}
-	return "Mois inconnu"
-}
-
-func roundFloat(val float64, precision int) float64 {
-	ratio := float64(1)
-	for i := 0; i < precision; i++ {
-		ratio *= 10
-	}
-	return float64(int(val*ratio+0.5)) / ratio
+	return *ptr
 }

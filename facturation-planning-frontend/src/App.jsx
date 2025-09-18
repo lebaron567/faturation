@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthErrorHandler from "./components/AuthErrorHandler";
 import Home from "./components/Home";
@@ -24,6 +25,8 @@ import ListeDevis from "./components/ListeDevis";
 import DevisDetails from "./components/DevisDetails";
 import DevisManager from "./components/DevisManager";
 import FacturationMensuelle from "./components/FacturationMensuelle";
+import GestionClients from "./components/GestionClients";
+import GestionSalaries from "./components/GestionSalaries";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -74,6 +77,22 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AjouterClient />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients/gestion"
+            element={
+              <ProtectedRoute>
+                <GestionClients />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/salaries/gestion"
+            element={
+              <ProtectedRoute>
+                <GestionSalaries />
               </ProtectedRoute>
             }
           />
@@ -223,11 +242,13 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

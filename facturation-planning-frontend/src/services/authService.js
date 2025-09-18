@@ -1,5 +1,6 @@
 import api from '../axiosInstance';
 import { handleApiError } from '../utils/errorHandler';
+import { jwtDecode } from 'jwt-decode';
 
 // Configuration depuis les variables d'environnement
 const TOKEN_KEY = process.env.REACT_APP_TOKEN_KEY || "auth_token";
@@ -45,14 +46,30 @@ export const authService = {
             if (response.data.token) {
                 // Stocker le token JWT
                 localStorage.setItem(TOKEN_KEY, response.data.token);
-                if (DEBUG) {
-                    console.log('✅ Connexion réussie, token JWT stocké');
-                }
 
-                return {
-                    token: response.data.token,
-                    user: response.data.user || null
-                };
+                // Décoder le token pour extraire les informations utilisateur
+                try {
+                    const decoded = jwtDecode(response.data.token);
+                    const user = {
+                        id: decoded.id || decoded.entreprise_id,
+                        nom: decoded.nom,
+                        email: decoded.email,
+                        entreprise_id: decoded.entreprise_id
+                    };
+
+                    if (DEBUG) {
+                        console.log('✅ Connexion réussie, token JWT stocké');
+                        console.log('👤 Informations utilisateur extraites:', user);
+                    }
+
+                    return {
+                        token: response.data.token,
+                        user: user
+                    };
+                } catch (decodeError) {
+                    console.error('❌ Erreur décodage token:', decodeError);
+                    throw new Error('Token JWT invalide');
+                }
             } else {
                 throw new Error('Aucun token reçu du serveur');
             }
