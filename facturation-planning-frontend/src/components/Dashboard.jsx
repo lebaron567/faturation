@@ -180,17 +180,6 @@ const Dashboard = () => {
                     />
                 </div>
             </div>
-
-            {/* Bouton de rafraîchissement */}
-            <div className="dashboard-footer">
-                <button
-                    className="refresh-button"
-                    onClick={loadDashboardData}
-                    disabled={loading}
-                >
-                    {loading ? '⏳' : '🔄'} Actualiser
-                </button>
-            </div>
         </div>
     );
 };
