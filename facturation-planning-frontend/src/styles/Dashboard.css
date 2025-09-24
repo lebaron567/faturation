@@ -4,7 +4,9 @@
     max-width: 1200px;
     margin: 0 auto;
     background: #f8f9fa;
-    min-height: 100vh;
+    min-height: calc(100vh - 60px);
+    padding-bottom: 40px;
+    /* Espace en bas pour éviter la coupure */
 }
 
 /* Header */
@@ -258,7 +260,9 @@
 /* Footer */
 .dashboard-footer {
     text-align: center;
-    padding: 20px 0;
+    padding: 30px 0 40px 0;
+    /* Plus d'espace en bas */
+    margin-top: 40px;
 }
 
 .refresh-button {

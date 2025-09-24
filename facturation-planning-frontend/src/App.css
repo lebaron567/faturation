@@ -51,7 +51,8 @@ body,
 .main-content:not(.planning-page)>*:not(header) {
   flex-grow: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0;
+  /* Retiré le padding global pour éviter les conflits */
   box-sizing: border-box;
   height: calc(100vh - 60px);
   /* Hauteur exacte moins le header */
