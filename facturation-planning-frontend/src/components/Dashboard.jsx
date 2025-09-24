@@ -14,7 +14,6 @@ const Dashboard = () => {
         devis: { total: 0, acceptes: 0, enCours: 0, refuses: 0 }
     });
 
-    const { showError } = useToast();
     const { loading, execute } = useAsyncOperation();
 
     useEffect(() => {
@@ -51,8 +50,7 @@ const Dashboard = () => {
                 }));
             }, {
                 showSuccessToast: false,
-                errorMessage: 'Erreur lors du chargement des statistiques',
-                loadingMessage: 'Chargement du tableau de bord...'
+                errorMessage: 'Erreur lors du chargement des statistiques'
             });
         } catch (error) {
             console.error('Erreur dashboard:', error);
@@ -96,7 +94,7 @@ const Dashboard = () => {
     };
 
     if (loading) {
-        return <LoadingSpinner size="large" message="Chargement du tableau de bord..." fullscreen />;
+        return <LoadingSpinner size="large" fullscreen />;
     }
 
     return (
@@ -180,36 +178,6 @@ const Dashboard = () => {
                         onClick={() => navigateTo('/planning')}
                         color="orange"
                     />
-                </div>
-            </div>
-
-            {/* Section Activité récente */}
-            <div className="dashboard-section">
-                <h2>📈 Activité récente</h2>
-                <div className="activity-summary">
-                    <div className="activity-item">
-                        <div className="activity-icon">📝</div>
-                        <div className="activity-content">
-                            <h4>Dernier devis créé</h4>
-                            <p>Il y a 2 heures</p>
-                        </div>
-                    </div>
-
-                    <div className="activity-item">
-                        <div className="activity-icon">💰</div>
-                        <div className="activity-content">
-                            <h4>Dernière facture payée</h4>
-                            <p>Il y a 1 jour</p>
-                        </div>
-                    </div>
-
-                    <div className="activity-item">
-                        <div className="activity-icon">👤</div>
-                        <div className="activity-content">
-                            <h4>Nouveau client ajouté</h4>
-                            <p>Il y a 3 jours</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 

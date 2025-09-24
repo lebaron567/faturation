@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import KeyboardShortcuts from "./KeyboardShortcuts";
 import "../styles/Header.css";
 
 const Header = ({ toggleSidebar }) => {
@@ -144,8 +143,6 @@ const Header = ({ toggleSidebar }) => {
             </div>
           </>
         )}
-
-        <KeyboardShortcuts isAuthenticated={isAuthenticated} />
       </div>
     </header>
   );

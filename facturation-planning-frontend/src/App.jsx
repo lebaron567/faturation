@@ -5,6 +5,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthErrorHandler from "./components/AuthErrorHandler";
 import Home from "./components/Home";
+import Dashboard from "./components/Dashboard";
 import FactureManager from "./components/FactureManager";
 import FactureFormComplet from "./components/FactureFormComplet";
 import FactureDetails from "./components/FactureDetails";
@@ -27,7 +28,6 @@ import DevisManager from "./components/DevisManager";
 import FacturationMensuelle from "./components/FacturationMensuelle";
 import GestionClients from "./components/GestionClients";
 import GestionSalaries from "./components/GestionSalaries";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useAuth } from "./contexts/AuthContext";
 
 import "./App.css";
@@ -35,11 +35,7 @@ import "./App.css";
 // Composant wrapper pour utiliser les hooks à l'intérieur du Router
 function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { isAuthenticated } = useAuth();
   const location = useLocation();
-
-  // Intégrer les raccourcis clavier (maintenant à l'intérieur du Router)
-  useKeyboardShortcuts(isAuthenticated);
 
   // Déterminer si nous sommes sur la page de planning
   const isPlanningPage = location.pathname === '/planning' || location.pathname === '/planning-test' || location.pathname === '/jwt-diagnostic';
@@ -66,6 +62,14 @@ function AppContent() {
           {/* Routes protégées */}
           <Route
             path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/home"
             element={
               <ProtectedRoute>
                 <Home />
